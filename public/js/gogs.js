@@ -1095,7 +1095,6 @@ function searchUsers() {
             url: suburl + '/api/v1/users/search?q=' + keyword,
             dataType: "json",
             success: function (response) {
-                //console.log(response)
                 var notEmpty = function (str) {
                     return str && str.length > 0;
                 };
