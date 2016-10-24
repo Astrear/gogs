@@ -25,10 +25,15 @@ const (
 	MAIL_AUTH_RESET_PASSWORD  base.TplName = "auth/reset_passwd"
 	MAIL_AUTH_REGISTER_NOTIFY base.TplName = "auth/register_notify"
 
+	MAIL_AUTH_REGISTER_PROFESSOR_NOTIFY   base.TplName = "auth/register_professor_notify"
+	MAIL_AUTH_REGISTER_PROFESSOR_APPROVED base.TplName = "auth/register_professor_approved"
+	MAIL_AUTH_REGISTER_PROFESSOR_DENIED   base.TplName = "auth/register_professor_denied"
+
 	MAIL_ISSUE_COMMENT base.TplName = "issue/comment"
 	MAIL_ISSUE_MENTION base.TplName = "issue/mention"
 
-	MAIL_NOTIFY_COLLABORATOR base.TplName = "notify/collaborator"
+	MAIL_NOTIFY_COLLABORATOR     base.TplName = "notify/collaborator"
+	MAIL_NOTIFY_REG_COLLABORATOR base.TplName = "notify/reg_collaborator"
 )
 
 type MailRender interface {
@@ -104,6 +109,56 @@ func SendActivateEmailMail(c *macaron.Context, u *User, email *EmailAddress) {
 	mailer.SendAsync(msg)
 }
 
+<<<<<<< HEAD
+// SendNotifyAccountMail triggers a notify e-mail when a professor creates an account.
+func SendNotifyAccountMail(c *macaron.Context, u *User) {
+	data := map[string]interface{}{
+		"Username": u.DisplayName(),
+	}
+	body, err := mailRender.HTMLString(string(MAIL_AUTH_REGISTER_PROFESSOR_NOTIFY), data)
+	if err != nil {
+		log.Error(3, "HTMLString: %v", err)
+		return
+	}
+
+	msg := mailer.NewMessage([]string{u.Email}, c.Tr("mail.register_professor_notify"), body)
+	msg.Info = fmt.Sprintf("UID: %d, registration notify", u.ID)
+
+	mailer.SendAsync(msg)
+}
+
+func SendApprovedAccountMail(c *macaron.Context, u *User) {
+	data := map[string]interface{}{
+		"Username": u.DisplayName(),
+	}
+	body, err := mailRender.HTMLString(string(MAIL_AUTH_REGISTER_PROFESSOR_APPROVED), data)
+	if err != nil {
+		log.Error(3, "HTMLString: %v", err)
+		return
+	}
+	msg := mailer.NewMessage([]string{u.Email}, c.Tr("mail.register_professor_notify"), body)
+	msg.Info = fmt.Sprintf("UID: %d, registration notify : Approved", u.ID)
+
+	mailer.SendAsync(msg)
+}
+
+func SendDeniedAccountMail(c *macaron.Context, u *User) {
+	data := map[string]interface{}{
+		"Username": u.DisplayName(),
+	}
+	body, err := mailRender.HTMLString(string(MAIL_AUTH_REGISTER_PROFESSOR_DENIED), data)
+	if err != nil {
+		log.Error(3, "HTMLString: %v", err)
+		return
+	}
+	msg := mailer.NewMessage([]string{u.Email}, c.Tr("mail.register_professor_notify"), body)
+	msg.Info = fmt.Sprintf("UID: %d, registration notify : Denied", u.ID)
+
+	mailer.SendAsync(msg)
+}
+
+=======
+>>>>>>> 6bcff7828f117af8d51285ce3acba01a7e40a867
 // SendRegisterNotifyMail triggers a notify e-mail by admin created a account.
 func SendRegisterNotifyMail(c *macaron.Context, u *User) {
 	data := map[string]interface{}{
@@ -124,7 +179,11 @@ func SendRegisterNotifyMail(c *macaron.Context, u *User) {
 // SendCollaboratorMail sends mail notification to new collaborator.
 func SendCollaboratorMail(u, doer *User, repo *Repository) {
 	repoName := path.Join(repo.Owner.Name, repo.Name)
+<<<<<<< HEAD
+	subject := fmt.Sprintf("GitWolf: %s te añadio como colaboorador a %s", doer.DisplayName(), repoName)
+=======
 	subject := fmt.Sprintf("%s added you to %s", doer.DisplayName(), repoName)
+>>>>>>> 6bcff7828f117af8d51285ce3acba01a7e40a867
 
 	data := map[string]interface{}{
 		"Subject":  subject,
@@ -143,6 +202,30 @@ func SendCollaboratorMail(u, doer *User, repo *Repository) {
 	mailer.SendAsync(msg)
 }
 
+<<<<<<< HEAD
+func SendRegisterInvitationCollab(email string, doer *User, repo *Repository) {
+	repoName := path.Join(repo.Owner.Name, repo.Name)
+	subject := fmt.Sprintf("GitWolf: %s te añadio como colaboorador a %s", doer.DisplayName(), repoName)
+
+	data := map[string]interface{}{
+		"Subject":  subject,
+		"RepoName": repoName,
+		"Link":     repo.HTMLURL(),
+	}
+	body, err := mailRender.HTMLString(string(MAIL_NOTIFY_REG_COLLABORATOR), data)
+	if err != nil {
+		log.Error(3, "HTMLString: %v", err)
+		return
+	}
+
+	msg := mailer.NewMessage([]string{email}, subject, body)
+	msg.Info = fmt.Sprintf("UID: %d, add collaborator", email)
+
+	mailer.SendAsync(msg)
+}
+
+=======
+>>>>>>> 6bcff7828f117af8d51285ce3acba01a7e40a867
 func composeTplData(subject, body, link string) map[string]interface{} {
 	data := make(map[string]interface{}, 10)
 	data["Subject"] = subject

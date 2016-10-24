@@ -214,7 +214,14 @@ func runWeb(ctx *cli.Context) error {
 		})
 		m.Get("/repos", routers.ExploreRepos)
 		m.Get("/users", routers.ExploreUsers)
+		m.Get("/professors", routers.ExploreProfessors)
 		m.Get("/organizations", routers.ExploreOrganizations)
+		m.Get("/semesters", routers.ExploreSemesters)
+		m.Get("/groups", routers.ExploreGroups)
+		m.Get("/subjects", routers.ExploreSubjects)
+		m.Get("/tags", routers.ExploreTags)
+		m.Get("/advanced", routers.AdvancedSearch)
+
 	}, ignSignIn)
 	m.Combo("/install", routers.InstallInit).Get(routers.Install).
 		Post(bindIgnErr(auth.InstallForm{}), routers.InstallPost)
@@ -239,6 +246,15 @@ func runWeb(ctx *cli.Context) error {
 		m.Combo("/email").Get(user.SettingsEmails).
 			Post(bindIgnErr(auth.AddEmailForm{}), user.SettingsEmailPost)
 		m.Post("/email/delete", user.DeleteEmail)
+
+		m.Group("/course", func() {
+			m.Combo("").Get(user.SettingsCourses).Post(bindIgnErr(auth.AdminCrateSubjectForm{}), user.CoursePost)
+			m.Get("/new", user.NewCourse)
+			m.Post("/new", bindIgnErr(auth.CreateNewCourseForm{}), user.NewCoursePost)
+			m.Post("/status", user.ChangeCourseStatus)
+			m.Post("/delete", user.DeleteCourse)
+		})
+
 		m.Get("/password", user.SettingsPassword)
 		m.Post("/password", bindIgnErr(auth.ChangePasswordForm{}), user.SettingsPasswordPost)
 		m.Combo("/ssh").Get(user.SettingsSSHKeys).
@@ -279,6 +295,19 @@ func runWeb(ctx *cli.Context) error {
 			m.Post("/:userid/delete", admin.DeleteUser)
 		})
 
+		m.Group("/professors", func() {
+			m.Get("", admin.Professors)
+			m.Combo("/new").Get(admin.NewProfessor).Post(bindIgnErr(auth.AdminCrateUserForm{}), admin.NewProfessorPost)
+			m.Combo("/:userid").Get(admin.EditProfessor).Post(bindIgnErr(auth.AdminEditUserForm{}), admin.EditProfessorPost)
+			m.Post("/:userid/delete", admin.DeleteProfessor)
+		})
+
+		m.Group("/applications", func() {
+			m.Get("", admin.Applications)
+			m.Post("/activate", admin.ActivateUser)
+			m.Post("/delete", admin.DeleteApplicationUser)
+		})
+
 		m.Group("/orgs", func() {
 			m.Get("", admin.Organizations)
 		})
@@ -286,6 +315,34 @@ func runWeb(ctx *cli.Context) error {
 		m.Group("/repos", func() {
 			m.Get("", admin.Repos)
 			m.Post("/delete", admin.DeleteRepo)
+		})
+
+		m.Group("/subjects", func() {
+			m.Get("", admin.Subjects)
+			m.Combo("/new").Get(admin.NewSubject).Post(bindIgnErr(auth.AdminCrateSubjectForm{}), admin.NewSubjectPost)
+			m.Combo("/:subjectid").Get(admin.EditSubject).Post(bindIgnErr(auth.AdminEditSubjectForm{}), admin.EditSubjectPost)
+			m.Post("/:subjectid/delete", admin.DeleteSubject)
+		})
+
+		m.Group("/semesters", func() {
+			m.Get("", admin.Semesters)
+			m.Combo("/new").Get(admin.NewSemester).Post(bindIgnErr(auth.AdminCrateSemesterForm{}), admin.NewSemesterPost)
+			m.Combo("/:semesterid").Get(admin.EditSemester).Post(bindIgnErr(auth.AdminEditSemesterForm{}), admin.EditSemesterPost)
+			m.Post("/:semesterid/delete", admin.DeleteSemester)
+		})
+
+		m.Group("/groups", func() {
+			m.Get("", admin.Groups)
+			m.Combo("/new").Get(admin.NewGroup).Post(bindIgnErr(auth.AdminCreateGroupForm{}), admin.NewGroupPost)
+			m.Combo("/:groupid").Get(admin.EditGroup).Post(bindIgnErr(auth.AdminEditGroupForm{}), admin.EditGroupPost)
+			m.Post("/:groupid/delete", admin.DeleteGroup)
+		})
+
+		m.Group("/tags", func() {
+			m.Get("", admin.Tags)
+			m.Combo("/new").Get(admin.NewTag).Post(bindIgnErr(auth.AdminCreateTagForm{}), admin.NewTagPost)
+			m.Combo("/:tagid").Get(admin.EditTag).Post(bindIgnErr(auth.AdminEditTagForm{}), admin.EditTagPost)
+			m.Post("/:tagid/delete", admin.DeleteTag)
 		})
 
 		m.Group("/auths", func() {
@@ -406,6 +463,11 @@ func runWeb(ctx *cli.Context) error {
 	}, reqSignIn)
 	// ***** END: Organization *****
 
+	m.Group("/tag", func() {
+		m.Get("/create", repo.CreateTag)
+		m.Post("/create", bindIgnErr(auth.CreateTagForm{}), repo.CreateTagPost)
+	}, reqSignIn)
+
 	// ***** START: Repository *****
 	m.Group("/repo", func() {
 		m.Get("/create", repo.Create)
@@ -424,6 +486,11 @@ func runWeb(ctx *cli.Context) error {
 				m.Combo("").Get(repo.Collaboration).Post(repo.CollaborationPost)
 				m.Post("/access_mode", repo.ChangeCollaborationAccessMode)
 				m.Post("/delete", repo.DeleteCollaboration)
+			})
+
+			m.Group("/tags", func() {
+				m.Combo("").Get(repo.ManageTag).Post(repo.ManageTagPost)
+				m.Post("/delete", repo.DeleteTagsRepo)
 			})
 
 			m.Group("/hooks", func() {
@@ -552,6 +619,7 @@ func runWeb(ctx *cli.Context) error {
 	m.Group("/:username/:reponame", func() {
 		m.Group("", func() {
 			m.Get("/releases", repo.Releases)
+			m.Get("/contributions", repo.Contributions)
 			m.Get("/^:type(issues|pulls)$", repo.RetrieveLabels, repo.Issues)
 			m.Get("/^:type(issues|pulls)$/:index", repo.ViewIssue)
 			m.Get("/labels/", repo.RetrieveLabels, repo.Labels)
@@ -602,6 +670,11 @@ func runWeb(ctx *cli.Context) error {
 			m.Get("", repo.Home)
 			m.Get("\\.git$", repo.Home)
 		}, ignSignIn, context.RepoAssignment(true), context.RepoRef())
+
+		m.Group("/:reponame", func() {
+			m.Get("/register", user.RegisterToCollab)
+			m.Post("/register", bindIgnErr(auth.RegisterForm{}), user.RegisterToCollabPost)
+		}, context.RepoAssignment(true), context.RepoRef())
 
 		m.Group("/:reponame", func() {
 			m.Any("/*", ignSignInAndCsrf, repo.HTTP)

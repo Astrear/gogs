@@ -5,10 +5,10 @@
 package repo
 
 import (
+	"github.com/gogits/git-module"
+	"strconv"
 	"strings"
 	"time"
-
-	"github.com/gogits/git-module"
 
 	"github.com/gogits/gogs/models"
 	"github.com/gogits/gogs/modules/auth"
@@ -21,6 +21,8 @@ import (
 const (
 	SETTINGS_OPTIONS base.TplName = "repo/settings/options"
 	COLLABORATION    base.TplName = "repo/settings/collaboration"
+	TAGS             base.TplName = "repo/settings/tags_manage"
+	SCHOOL           base.TplName = "repo/settings/school_data"
 	GITHOOKS         base.TplName = "repo/settings/githooks"
 	GITHOOK_EDIT     base.TplName = "repo/settings/githook_edit"
 	DEPLOY_KEYS      base.TplName = "repo/settings/deploy_keys"
@@ -29,6 +31,77 @@ const (
 func Settings(ctx *context.Context) {
 	ctx.Data["Title"] = ctx.Tr("repo.settings")
 	ctx.Data["PageIsSettingsOptions"] = true
+
+	professors, err := models.GetProfessors()
+	if err != nil {
+		ctx.Handle(500, "GetProfessors", err)
+		return
+	}
+
+	ctx.Data["Professors"] = professors
+
+	subjects, err := models.GetSubjects()
+	if err != nil {
+		ctx.Handle(500, "GetSubjects", err)
+		return
+	}
+	ctx.Data["Subjects"] = subjects
+
+	semesters, err := models.GetSemesters()
+	if err != nil {
+		ctx.Handle(500, "GetSemesters", err)
+		return
+	}
+	ctx.Data["Semesters"] = semesters
+
+	groups, err := models.GetGroups()
+	if err != nil {
+		ctx.Handle(500, "GetGroups", err)
+		return
+	}
+	ctx.Data["Groups"] = groups
+
+	repo := ctx.Repo.Repository
+	if repo.ProfessorID > 0 {
+		professor, err := repo.GetProfessor()
+		if err != nil {
+			ctx.Handle(500, "GetProfessor", err)
+			return
+		}
+		ctx.Data["Professor"] = professor
+		ctx.Data["Professor_Success"] = true
+	}
+
+	if repo.SubjectID > 0 {
+		subject, err := repo.GetSubject()
+		if err != nil {
+			ctx.Handle(500, "GetSubject", err)
+			return
+		}
+		ctx.Data["Subject"] = subject
+		ctx.Data["Subject_Success"] = true
+	}
+
+	if repo.SemesterID > 0 {
+		semester, err := repo.GetSemester()
+		if err != nil {
+			ctx.Handle(500, "GetSemester", err)
+			return
+		}
+		ctx.Data["Semester"] = semester
+		ctx.Data["Semester_Success"] = true
+	}
+
+	if repo.GroupID > 0 {
+		group, err := repo.GetGroup()
+		if err != nil {
+			ctx.Handle(500, "GetGroup", err)
+			return
+		}
+		ctx.Data["Group"] = group
+		ctx.Data["Group_Success"] = true
+	}
+
 	ctx.HTML(200, SETTINGS_OPTIONS)
 }
 
@@ -84,6 +157,33 @@ func SettingsPost(ctx *context.Context, form auth.RepoSettingForm) {
 		}
 		repo.Description = form.Description
 		repo.Website = form.Website
+
+		//METADATOS ESCOLARES
+		if repo.ProfessorID != form.Professor {
+			if err := repo.DeleteCollaboration(repo.ProfessorID); err != nil {
+				log.Error(4, "DeleteCollaboration: ", err)
+			}
+
+			repo.ProfessorID = form.Professor
+
+			u, err := models.GetUserByID(ctx.QueryInt64("professor"))
+			if err != nil {
+				if models.IsErrUserNotExist(err) {
+					log.Error(4, "IsErrUserNotExist: ", err)
+				}
+				return
+			}
+
+			if err := repo.AddCollaborator(u); err != nil {
+				log.Error(4, "AddCollaborator: ", err)
+				return
+			}
+		}
+
+		repo.SubjectID = form.Subject
+		repo.SemesterID = form.Semester
+		repo.GroupID = form.Group
+		// FIN METADATOS ESCOLARES
 
 		// Visibility of forked repository is forced sync with base repository.
 		if repo.IsFork {
@@ -292,6 +392,103 @@ func SettingsPost(ctx *context.Context, form auth.RepoSettingForm) {
 	}
 }
 
+func ManageTag(ctx *context.Context) {
+	ctx.Data["Title"] = ctx.Tr("repo.settings.tags")
+	ctx.Data["PageIsSettingsTags"] = true
+
+	repoID := ctx.Repo.Repository.ID
+	tags, err := models.GetTagsOfRepo(repoID)
+
+	if err != nil {
+		ctx.Handle(500, "GetTagsOfRepo", err)
+		return
+	}
+	ctx.Data["Tags"] = tags
+
+	tags2, err := models.GetTags()
+	if err != nil {
+		ctx.Handle(500, "GetTags", err)
+		return
+	}
+
+	ctx.Data["TagsR"] = tags2
+
+	ctx.HTML(200, TAGS)
+}
+
+func ManageTagPost(ctx *context.Context) {
+
+	switch ctx.Query("action") {
+	case "update":
+		tags := strings.ToLower(ctx.Query("tags"))
+		repoID := ctx.Repo.Repository.ID
+
+		arr_tags := strings.Split(tags, ",")
+		for _, tag := range arr_tags {
+			tagID, _ := strconv.ParseInt(tag, 10, 64)
+			models.LinkTagtoRepo(tagID, repoID, true)
+		}
+
+		ctx.Flash.Success(ctx.Tr("repo.settings.add_tag_success"))
+		ctx.Redirect(setting.AppSubUrl + ctx.Req.URL.Path)
+
+	case "create":
+
+		t := &models.Tag{
+			Etiqueta: ctx.Query("etiqueta"),
+		}
+
+		if err := models.CreateTag(t); err != nil {
+			switch {
+			case models.IsErrTagAlreadyExist(err):
+				ctx.Data["Err_TagName"] = true
+				ctx.Flash.Error(ctx.Tr("form.tagname_been_taken"))
+				ctx.Redirect(setting.AppSubUrl + ctx.Req.URL.Path)
+			case models.IsErrNameReserved(err):
+				ctx.Data["Err_TagName"] = true
+				ctx.Flash.Error(ctx.Tr("user.form.name_reserved"))
+				ctx.Redirect(setting.AppSubUrl + ctx.Req.URL.Path)
+			case models.IsErrNamePatternNotAllowed(err):
+				ctx.Data["Err_TagName"] = true
+				ctx.Flash.Error(ctx.Tr("user.form.name_pattern_not_allowed"))
+				ctx.Redirect(setting.AppSubUrl + ctx.Req.URL.Path)
+			default:
+				ctx.Handle(500, "Create Tag User", err)
+			}
+			return
+		}
+
+		log.Trace("Tag created: %s", t.Etiqueta)
+
+		ctx.Flash.Success(ctx.Tr("admin.new_tag_success", t.Etiqueta))
+		ctx.Redirect(setting.AppSubUrl + ctx.Req.URL.Path)
+
+	default:
+		ctx.Handle(404, "", nil)
+	}
+}
+
+func DeleteTagsRepo(ctx *context.Context) {
+	if err := ctx.Repo.Repository.DeleteCollaboration(ctx.QueryInt64("id")); err != nil {
+		ctx.Flash.Error("DeleteCollaboration: " + err.Error())
+	} else {
+		ctx.Flash.Success(ctx.Tr("repo.settings.remove_tag_success"))
+	}
+
+	repoID := ctx.Repo.Repository.ID
+	borrar := models.UnlinkTagRepo(repoID, ctx.QueryInt64("id"))
+
+	if borrar {
+		ctx.Flash.Success(ctx.Tr("repo.settings.remove_tag_success"))
+	} else {
+		ctx.Flash.Error("Error unlinking tag")
+	}
+
+	ctx.JSON(200, map[string]interface{}{
+		"redirect": ctx.Repo.RepoLink + "/settings/tags",
+	})
+}
+
 func Collaboration(ctx *context.Context) {
 	ctx.Data["Title"] = ctx.Tr("repo.settings")
 	ctx.Data["PageIsSettingsCollaboration"] = true
@@ -313,42 +510,49 @@ func CollaborationPost(ctx *context.Context) {
 		return
 	}
 
-	u, err := models.GetUserByName(name)
-	if err != nil {
-		if models.IsErrUserNotExist(err) {
-			ctx.Flash.Error(ctx.Tr("form.user_not_exist"))
-			ctx.Redirect(setting.AppSubUrl + ctx.Req.URL.Path)
-		} else {
-			ctx.Handle(500, "GetUserByName", err)
-		}
-		return
-	}
-
-	// Organization is not allowed to be added as a collaborator.
-	if u.IsOrganization() {
-		ctx.Flash.Error(ctx.Tr("repo.settings.org_not_allowed_to_be_collaborator"))
+	if strings.Contains(name, "@"){
+		models.SendRegisterInvitationCollab(name, ctx.User, ctx.Repo.Repository)
+		ctx.Flash.Success(ctx.Tr("repo.settings.add_collaborator_reg_success", name))
 		ctx.Redirect(setting.AppSubUrl + ctx.Req.URL.Path)
-		return
-	}
+	} else {
 
-	// Check if user is organization member.
-	if ctx.Repo.Owner.IsOrganization() && ctx.Repo.Owner.IsOrgMember(u.ID) {
-		ctx.Flash.Info(ctx.Tr("repo.settings.user_is_org_member"))
-		ctx.Redirect(ctx.Repo.RepoLink + "/settings/collaboration")
-		return
-	}
+		u, err := models.GetUserByName(name)
+		if err != nil {
+			if models.IsErrUserNotExist(err) {
+				ctx.Flash.Error(ctx.Tr("form.user_not_exist"))
+				ctx.Redirect(setting.AppSubUrl + ctx.Req.URL.Path)
+			} else {
+				ctx.Handle(500, "GetUserByName", err)
+			}
+			return
+		}
 
-	if err = ctx.Repo.Repository.AddCollaborator(u); err != nil {
-		ctx.Handle(500, "AddCollaborator", err)
-		return
-	}
+		// Organization is not allowed to be added as a collaborator.
+		if u.IsOrganization() {
+			ctx.Flash.Error(ctx.Tr("repo.settings.org_not_allowed_to_be_collaborator"))
+			ctx.Redirect(setting.AppSubUrl + ctx.Req.URL.Path)
+			return
+		}
 
-	if setting.Service.EnableNotifyMail {
-		models.SendCollaboratorMail(u, ctx.User, ctx.Repo.Repository)
-	}
+		// Check if user is organization member.
+		if ctx.Repo.Owner.IsOrganization() && ctx.Repo.Owner.IsOrgMember(u.ID) {
+			ctx.Flash.Info(ctx.Tr("repo.settings.user_is_org_member"))
+			ctx.Redirect(ctx.Repo.RepoLink + "/settings/collaboration")
+			return
+		}
 
-	ctx.Flash.Success(ctx.Tr("repo.settings.add_collaborator_success"))
-	ctx.Redirect(setting.AppSubUrl + ctx.Req.URL.Path)
+		if err = ctx.Repo.Repository.AddCollaborator(u); err != nil {
+			ctx.Handle(500, "AddCollaborator", err)
+			return
+		}
+
+		if setting.Service.EnableNotifyMail {
+			models.SendCollaboratorMail(u, ctx.User, ctx.Repo.Repository)
+		}
+
+		ctx.Flash.Success(ctx.Tr("repo.settings.add_collaborator_success"))
+		ctx.Redirect(setting.AppSubUrl + ctx.Req.URL.Path)
+	}
 }
 
 func ChangeCollaborationAccessMode(ctx *context.Context) {

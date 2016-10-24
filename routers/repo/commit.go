@@ -6,21 +6,22 @@ package repo
 
 import (
 	"container/list"
+	"fmt"
 	"path"
 
 	"github.com/Unknwon/paginater"
-
 	"github.com/gogits/git-module"
-
 	"github.com/gogits/gogs/models"
 	"github.com/gogits/gogs/modules/base"
 	"github.com/gogits/gogs/modules/context"
+	//"github.com/gogits/gogs/modules/log"
 	"github.com/gogits/gogs/modules/setting"
 )
 
 const (
-	COMMITS base.TplName = "repo/commits"
-	DIFF    base.TplName = "repo/diff/page"
+	COMMITS       base.TplName = "repo/commits"
+	CONTRIBUTIONS base.TplName = "repo/contributions"
+	DIFF          base.TplName = "repo/diff/page"
 )
 
 func RefCommits(ctx *context.Context) {
@@ -41,6 +42,109 @@ func RenderIssueLinks(oldCommits *list.List, repoLink string) *list.List {
 		newCommits.PushBack(c)
 	}
 	return newCommits
+}
+
+type UserStadistics struct {
+	Modifications *git.StatsUser
+	Commits       *git.CommitsInfo
+	User          *models.User
+}
+
+type RepoStadistics struct {
+	Modifications *git.StatsUser
+	Commits       *git.CommitsInfo
+}
+
+func Contributions(ctx *context.Context) {
+	ctx.Data["PageIsContributions"] = true
+
+	var repostadistics *RepoStadistics
+	var userstadistics []*UserStadistics
+
+	stats, err := ctx.Repo.Commit.NumStatCommitsPerUser("")
+	if err != nil {
+		ctx.Handle(500, "CommitsCountPerCollab", err)
+		return
+	}
+
+	allcommits, err := ctx.Repo.Commit.CommitsCountPerCollab("")
+	if err != nil {
+		ctx.Handle(500, "CommitsCountPerCollab", err)
+		return
+	}
+
+	repostadistics = &RepoStadistics{
+		Modifications: stats,
+		Commits:       allcommits,
+	}
+
+	users := make([]*models.Collaborator, 0, 4)
+	users = append(users, &models.Collaborator{
+		User:          ctx.Repo.Owner,
+		Collaboration: &models.Collaboration{},
+	})
+
+	collaborators, err := ctx.Repo.Repository.GetCollaborators()
+	if err != nil {
+		fmt.Errorf("GetCollaborators: [%v]", err)
+	}
+
+	users = append(users, collaborators...)
+
+	userstadistics = make([]*UserStadistics, 0, 4)
+	for _, user := range users {
+		if user.FullName == "" {
+			commits, err := ctx.Repo.Commit.CommitsCountPerCollab(user.Name)
+			if err != nil {
+				ctx.Handle(500, "CommitsCountPerCollab", err)
+				return
+			}
+			stats, err := ctx.Repo.Commit.NumStatCommitsPerUser(user.Name)
+			if err != nil {
+				ctx.Handle(500, "NumStatCommitsPerUser", err)
+				return
+			}
+
+			if user.Type != models.USER_TYPE_PROFESSOR {
+				userstadistics = append(userstadistics, &UserStadistics{
+					Modifications: stats,
+					Commits:       commits,
+					User:          user.User,
+				})
+			}
+		} else {
+			commits, err := ctx.Repo.Commit.CommitsCountPerCollab(user.FullName)
+			if err != nil {
+				ctx.Handle(500, "CommitsCountPerCollab", err)
+				return
+			}
+			stats, err := ctx.Repo.Commit.NumStatCommitsPerUser(user.FullName)
+			if err != nil {
+				ctx.Handle(500, "NumStatCommitsPerUser", err)
+				return
+			}
+
+			if user.Type != models.USER_TYPE_PROFESSOR {
+				userstadistics = append(userstadistics, &UserStadistics{
+					Modifications: stats,
+					Commits:       commits,
+					User:          user.User,
+				})
+			}
+		}
+	}
+
+	fmt.Printf("%+v\n\n", repostadistics.Modifications)
+	for _, stat := range userstadistics {
+		fmt.Printf("%+v\n", stat.Modifications)
+	}
+
+	ctx.Data["Commiters"] = users
+	ctx.Data["RepoStadistics"] = repostadistics
+	ctx.Data["UserStadistics"] = userstadistics
+	ctx.Data["Username"] = ctx.Repo.Owner.Name
+	ctx.Data["Reponame"] = ctx.Repo.Repository.Name
+	ctx.HTML(200, CONTRIBUTIONS)
 }
 
 func Commits(ctx *context.Context) {

@@ -1,0 +1,161 @@
+{{template "base/head" .}}
+<script>
+    var randomColorFactor = function() {
+      return Math.round(Math.random()* 127) + 127;
+    };
+    var randomColor = function(opacity) {
+      return 'rgba(' + randomColorFactor() + ',' + randomColorFactor() + ',' + randomColorFactor()+ ',' + (opacity || '1') + ')';
+    };
+
+    function pintarGrafica(colorGrafica){
+    	$.each(config.data.datasets, function(i, dataset) {
+    		var color = colorGrafica;
+    		dataset.borderColor = color;
+    		dataset.backgroundColor = color;
+    		dataset.pointBorderColor = color;
+    		dataset.pointBackgroundColor = color;
+    		dataset.pointBorderWidth = 1;
+    	});
+    }
+
+    var colorGraficaRepositorio = "#E5F9AF";
+</script>
+<div class="repository commits">
+	{{template "repo/header" .}}
+	<div class="ui container">
+		<div class="ui centered fluid card">
+			<div class="content">
+				<div class="header">
+					Aportaciones de los Usuarios
+				</div>
+				<div class="meta">
+					<span style="color: #4078c0;">{{ .RepoStadistics.Commits.Total}} commits</span>/<span style="color: #d36900;">{{.RepoStadistics.Modifications.Files}} Archivos Modificados</span>/<span style="color: #6cc644;">{{.RepoStadistics.Modifications.Insertions}} ++</span>/<span style="color: #bd2c00;">{{.RepoStadistics.Modifications.Deletions}} -- </span>
+				</div>
+				<div class="description">
+					<canvas id="canvas" width="200" height="40px"></canvas>
+				</div>
+			</div>
+		</div>
+		<script type="text/javascript">
+			var arr_labels = new Array();
+			var arr_commits = new Array();
+			var i = 0;
+
+			{{range .RepoStadistics.Commits.Info}} 
+				arr_labels[i] = {{ .Date}};
+				arr_commits[i] = {{ .NumCommits}};
+				i++;
+			{{end}}
+
+			var config = {
+				type: 'line',
+				data: {
+					labels: arr_labels.reverse(),
+					datasets: [{
+						label: "Commits",
+						data: arr_commits.reverse(),
+					}]
+				},
+				options: {
+					responsive: true,
+					tooltips: {
+						mode: 'x-axis',
+					},
+					scales: {
+						xAxes: [{
+							scaleLabel: {
+								display: true,
+								labelString: 'Fecha'
+							}
+						}],
+						yAxes: [{
+							stacked: true,
+							scaleLabel: {
+								display: true,
+								labelString: 'Commits'
+							}
+						}]
+					}
+				}
+			};
+			pintarGrafica("#00B5AD");
+
+			var ctx = document.getElementById("canvas").getContext("2d");
+			window.myLine = new Chart(ctx, config);
+		</script>
+		<div class="ui cards">
+			{{range .UserStadistics}}
+				<div class="ui fluid card" style="width:48.7%;">
+					<div class="content">
+						
+						<a href="{{AppSubUrl}}/{{.User.Name}}">
+						  <img class="right bordered floated mini ui image" src="{{if not .User.UseCustomAvatar}}https://secure.gravatar.com/avatar/{{.User.Avatar}}{{else}}/avatars/{{.User.ID}}{{end}}">
+						</a>
+						<div class="header">
+							{{if .User.FullName}}
+								{{.User.FullName}}
+							{{else if .User.Name}}
+								{{.User.Name}}
+							{{end}}
+						</div>
+						<div class="meta">
+							<span style="color: #5C5C5C;">{{ .Commits.Total}} commits</span>/<span style="color: #d36900;">{{ .Modifications.Files}} Archivos Modificados</span>/<span style="color: #6cc644;">{{ .Modifications.Insertions}}++</span>/<span style="color: #bd2c00;">{{ .Modifications.Deletions}} -- </span>
+						</div>
+						<div class="description">
+							<canvas id="canvas_{{.User.ID}}" width="200" height="50px"></canvas>
+						</div>
+					</div>
+				</div>
+				<script type="text/javascript">
+					var arr_labels = new Array();
+					var arr_commits = new Array();
+					var i = 0;
+
+					{{range .Commits.Info}} 
+						arr_labels[i] = {{ .Date}};
+						arr_commits[i] = {{ .NumCommits}};
+						i++;
+					{{end}}
+
+					var config = {
+						type: 'line',
+						data: {
+							labels: arr_labels.reverse(),
+							datasets: [{
+								label: "Commits",
+								data: arr_commits.reverse(),
+							}]
+						},
+						options: {
+							responsive: true,
+							tooltips: {
+								mode: 'x-axis',
+							},
+							scales: {
+								xAxes: [{
+									scaleLabel: {
+										display: true,
+										labelString: 'Fecha'
+									}
+								}],
+								yAxes: [{
+									stacked: true,
+									scaleLabel: {
+										display: true,
+										labelString: 'Numero de Commits'
+									}
+								}]
+							}
+						}
+					};
+					
+					pintarGrafica(randomColor(1));
+
+					var ctx = document.getElementById("canvas_{{.User.ID}}").getContext("2d");
+					window.myLine = new Chart(ctx, config);
+				</script>
+			{{end}}
+		</div>
+	</div>
+</div>
+{{template "base/footer" .}}

@@ -21,7 +21,9 @@ import (
 const (
 	SIGNIN          base.TplName = "user/auth/signin"
 	SIGNUP          base.TplName = "user/auth/signup"
+	INVITA          base.TplName = "user/auth/invitation"
 	ACTIVATE        base.TplName = "user/auth/activate"
+	NOTIFY        	base.TplName = "user/auth/prohibit_login"
 	FORGOT_PASSWORD base.TplName = "user/auth/forgot_passwd"
 	RESET_PASSWORD  base.TplName = "user/auth/reset_passwd"
 )
@@ -155,11 +157,11 @@ func SignUp(ctx *context.Context) {
 
 	if setting.Service.DisableRegistration {
 		ctx.Data["DisableRegistration"] = true
-		ctx.HTML(200, SIGNUP)
+		ctx.HTML(200, INVITA)
 		return
 	}
 
-	ctx.HTML(200, SIGNUP)
+	ctx.HTML(200, INVITA)
 }
 
 func SignUpPost(ctx *context.Context, cpt *captcha.Captcha, form auth.RegisterForm) {
@@ -189,11 +191,20 @@ func SignUpPost(ctx *context.Context, cpt *captcha.Captcha, form auth.RegisterFo
 		return
 	}
 
+	user_type := models.USER_TYPE_INDIVIDUAL
+	if form.Type {
+		user_type = models.USER_TYPE_PROFESSOR
+	}
+	log.Trace("checkbox: %s", form.Type)
+
 	u := &models.User{
 		Name:     form.UserName,
+		FullName: form.FullName,
 		Email:    form.Email,
 		Passwd:   form.Password,
 		IsActive: !setting.Service.RegisterEmailConfirm,
+		ProhibitLogin: form.Type,
+		Type: 	user_type,
 	}
 	if err := models.CreateUser(u); err != nil {
 		switch {
@@ -227,20 +238,124 @@ func SignUpPost(ctx *context.Context, cpt *captcha.Captcha, form auth.RegisterFo
 	}
 
 	// Send confirmation email, no need for social account.
-	if setting.Service.RegisterEmailConfirm && u.ID > 1 {
-		models.SendActivateAccountMail(ctx.Context, u)
-		ctx.Data["IsSendRegisterMail"] = true
-		ctx.Data["Email"] = u.Email
-		ctx.Data["Hours"] = setting.Service.ActiveCodeLives / 60
-		ctx.HTML(200, ACTIVATE)
+	if form.Type {
+		if setting.Service.RegisterEmailConfirm && u.ID > 1 {
+			models.SendNotifyAccountMail(ctx.Context, u)
+			ctx.Data["IsSendRegisterMail"] = true
+			ctx.Data["Email"] = u.Email
+			ctx.HTML(200, NOTIFY)
 
-		if err := ctx.Cache.Put("MailResendLimit_"+u.LowerName, u.LowerName, 180); err != nil {
-			log.Error(4, "Set cache(MailResendLimit) fail: %v", err)
+			if err := ctx.Cache.Put("MailResendLimit_"+u.LowerName, u.LowerName, 180); err != nil {
+				log.Error(4, "Set cache(MailResendLimit) fail: %v", err)
+			}
+			return
 		}
-		return
+	} else {
+		if setting.Service.RegisterEmailConfirm && u.ID > 1 {
+			models.SendActivateAccountMail(ctx.Context, u)
+			ctx.Data["IsSendRegisterMail"] = true
+			ctx.Data["Email"] = u.Email
+			ctx.Data["Hours"] = setting.Service.ActiveCodeLives / 60
+			ctx.HTML(200, ACTIVATE)
+
+			if err := ctx.Cache.Put("MailResendLimit_"+u.LowerName, u.LowerName, 180); err != nil {
+				log.Error(4, "Set cache(MailResendLimit) fail: %v", err)
+			}
+			return
+		}
 	}
 
 	ctx.Redirect(setting.AppSubUrl + "/user/login")
+}
+
+func RegisterToCollab(ctx *context.Context) {
+	ctx.Data["Title"] = ctx.Tr("sign_up")
+
+	ctx.Data["EnableCaptcha"] = setting.Service.EnableCaptcha
+
+	if setting.Service.DisableRegistration {
+		ctx.Data["DisableRegistration"] = true
+		ctx.HTML(200, SIGNUP)
+		return
+	}
+
+	ctx.HTML(200, SIGNUP)
+}
+
+func RegisterToCollabPost(ctx *context.Context, cpt *captcha.Captcha, form auth.RegisterForm) {
+	ctx.Data["Title"] = ctx.Tr("sign_up")
+
+	ctx.Data["EnableCaptcha"] = setting.Service.EnableCaptcha
+
+	if setting.Service.DisableRegistration {
+		ctx.Error(403)
+		return
+	}
+
+	if ctx.HasError() {
+		ctx.HTML(200, INVITA)
+		return
+	}
+
+	if setting.Service.EnableCaptcha && !cpt.VerifyReq(ctx.Req) {
+		ctx.Data["Err_Captcha"] = true
+		ctx.RenderWithErr(ctx.Tr("form.captcha_incorrect"), INVITA, &form)
+		return
+	}
+
+	if form.Password != form.Retype {
+		ctx.Data["Err_Password"] = true
+		ctx.RenderWithErr(ctx.Tr("form.password_not_match"), INVITA, &form)
+		return
+	}
+
+	user_type := models.USER_TYPE_INDIVIDUAL
+	if form.Type {
+		user_type = models.USER_TYPE_PROFESSOR
+	}
+	log.Trace("checkbox: %s", form.Type)
+
+	u := &models.User{
+		Name:     form.UserName,
+		FullName: form.FullName,
+		Email:    form.Email,
+		Passwd:   form.Password,
+		ProhibitLogin: form.Type,
+		Type: 	user_type,
+	}
+	if err := models.CreateUser(u); err != nil {
+		switch {
+		case models.IsErrUserAlreadyExist(err):
+			ctx.Data["Err_UserName"] = true
+			ctx.RenderWithErr(ctx.Tr("form.username_been_taken"), INVITA, &form)
+		case models.IsErrEmailAlreadyUsed(err):
+			ctx.Data["Err_Email"] = true
+			ctx.RenderWithErr(ctx.Tr("form.email_been_used"), INVITA, &form)
+		case models.IsErrNameReserved(err):
+			ctx.Data["Err_UserName"] = true
+			ctx.RenderWithErr(ctx.Tr("user.form.name_reserved", err.(models.ErrNameReserved).Name), INVITA, &form)
+		case models.IsErrNamePatternNotAllowed(err):
+			ctx.Data["Err_UserName"] = true
+			ctx.RenderWithErr(ctx.Tr("user.form.name_pattern_not_allowed", err.(models.ErrNamePatternNotAllowed).Pattern), INVITA, &form)
+		default:
+			ctx.Handle(500, "CreateUser", err)
+		}
+		return
+	}
+	log.Trace("Account created: %s", u.Name)
+	u.IsActive = true
+	if err := models.UpdateUser(u); err != nil {
+		ctx.Handle(500, "UpdateUser", err)
+		return
+	}
+
+	if err := ctx.Repo.Repository.AddCollaborator(u); err != nil {
+		ctx.Handle(500, "AddCollaborator", err)
+		return
+	}
+	ctx.Session.Set("uid", u.ID)
+	ctx.Session.Set("uname", u.Name)
+	ctx.Redirect(setting.AppSubUrl + "/"+ctx.Params(":username")+"/"+ctx.Params(":reponame"))
 }
 
 func Activate(ctx *context.Context) {
@@ -341,10 +456,8 @@ func ForgotPasswdPost(ctx *context.Context) {
 	u, err := models.GetUserByEmail(email)
 	if err != nil {
 		if models.IsErrUserNotExist(err) {
-			ctx.Data["Hours"] = setting.Service.ActiveCodeLives / 60
-			ctx.Data["IsResetSent"] = true
-			ctx.HTML(200, FORGOT_PASSWORD)
-			return
+			ctx.Data["Err_Email"] = true
+			ctx.RenderWithErr(ctx.Tr("auth.email_not_associate"), FORGOT_PASSWORD, nil)
 		} else {
 			ctx.Handle(500, "user.ResetPasswd(check existence)", err)
 		}

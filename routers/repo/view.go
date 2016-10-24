@@ -214,9 +214,6 @@ func renderFile(ctx *context.Context, entry *git.TreeEntry, treeLink, rawLink st
 
 func Home(ctx *context.Context) {
 	title := ctx.Repo.Repository.Owner.Name + "/" + ctx.Repo.Repository.Name
-	if len(ctx.Repo.Repository.Description) > 0 {
-		title += ": " + ctx.Repo.Repository.Description
-	}
 	ctx.Data["Title"] = title
 	ctx.Data["PageIsViewCode"] = true
 	ctx.Data["RequireHighlightJS"] = true
@@ -266,10 +263,30 @@ func Home(ctx *context.Context) {
 		}
 	}
 
+	collaborators, err := ctx.Repo.Repository.GetCollaborators()
+	if err != nil {
+		log.Trace("GetCollaborators: %v", err)
+	}
+
+	prof, err := ctx.Repo.Repository.GetProfessor()
+	if err != nil {
+		log.Trace("No professor found")
+		prof = nil
+	}
+
+	htags , err:= ctx.Repo.Repository.GetTags()
+	if err != nil {
+		log.Trace("No tags found")
+		htags = nil
+	}
+
 	ctx.Data["Paths"] = paths
 	ctx.Data["TreeLink"] = treeLink
 	ctx.Data["TreeNames"] = treeNames
 	ctx.Data["BranchLink"] = branchLink
+	ctx.Data["Collaborators"] = collaborators
+	ctx.Data["Professor"] = prof
+	ctx.Data["HTags"] = htags
 	ctx.HTML(200, HOME)
 }
 

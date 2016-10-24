@@ -31,6 +31,12 @@ type CreateRepoForm struct {
 	Gitignores  string
 	License     string
 	Readme      string
+	//Agregados
+	Tags      string
+	Semester  int64
+	Group     int64
+	Subject   int64
+	Professor int64
 }
 
 func (f *CreateRepoForm) Validate(ctx *macaron.Context, errs binding.Errors) binding.Errors {
@@ -99,6 +105,12 @@ type RepoSettingForm struct {
 	TrackerURLFormat      string
 	TrackerIssueStyle     string
 	EnablePulls           bool
+
+	//Datos Escolares
+	Professor int64
+	Subject   int64
+	Semester  int64
+	Group     int64
 }
 
 func (f *RepoSettingForm) Validate(ctx *macaron.Context, errs binding.Errors) binding.Errors {

@@ -3,9 +3,9 @@
 <head data-suburl="{{AppSubUrl}}">
 	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 	<meta http-equiv="X-UA-Compatible" content="IE=edge"/>
-	<meta name="author" content="{{if .Repository}}{{.Owner.Name}}{{else}}Gogs - Go Git Service{{end}}" />
-	<meta name="description" content="{{if .Repository}}{{.Repository.Name}}{{if .Repository.Description}} - {{.Repository.Description}}{{end}}{{else}}Gogs (Go Git Service) is a painless self-hosted Git service written in Go{{end}}" />
-	<meta name="keywords" content="go, git, self-hosted, gogs">
+	<meta name="author" content="ESCOM" />
+	<meta name="description" content="Repositorios de ESCOM" />
+	<meta name="keywords" content="go, git, ESCOM, GitWolf, gitwolf">
 	<meta name="referrer" content="no-referrer" />
 	<meta name="_csrf" content="{{.CsrfToken}}" />
 	<meta name="_suburl" content="{{AppSubUrl}}" />
@@ -42,6 +42,11 @@
 	<title>{{if .Title}}{{.Title}} - {{end}}{{AppName}}</title>
 
 	<meta name="theme-color" content="{{ThemeColorMetaTag}}">
+
+	<!--Charts.js-->
+	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.3.0/Chart.bundle.js"></script>
+	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.3.0/Chart.js"></script>
+
 </head>
 <body>
 	<div class="full height">
@@ -54,13 +59,12 @@
 						<div class="column">
 							<div class="ui top secondary menu">
 								<a class="item brand" href="{{AppSubUrl}}/">
-									<img class="ui mini image" src="{{AppSubUrl}}/img/favicon.png">
+									<img class="ui mini image" src="{{AppSubUrl}}/img/logo.png">
 								</a>
 
 								{{if .IsSigned}}
 									<a class="item{{if .PageIsDashboard}} active{{end}}" href="{{AppSubUrl}}/">{{.i18n.Tr "dashboard"}}</a>
 									<a class="item{{if .PageIsIssues}} active{{end}}" href="{{AppSubUrl}}/issues">{{.i18n.Tr "issues"}}</a>
-									<a class="item{{if .PageIsPulls}} active{{end}}" href="{{AppSubUrl}}/pulls">{{.i18n.Tr "pull_requests"}}</a>
 								{{else}}
 									<a class="item{{if .PageIsHome}} active{{end}}" href="{{AppSubUrl}}/">{{.i18n.Tr "home"}}</a>
 								{{end}}
@@ -113,10 +117,6 @@
 													<i class="octicon octicon-settings"></i>
 													{{.i18n.Tr "your_settings"}}<!-- Your settings -->
 												</a>
-												<a class="item" target="_blank" href="https://gogs.io/docs" rel="noreferrer">
-													<i class="octicon octicon-question"></i>
-													{{.i18n.Tr "help"}}<!-- Help -->
-												</a>
 												{{if .IsAdmin}}
 													<div class="divider"></div>
 
@@ -137,7 +137,6 @@
 
 								{{else}}
 
-									<a class="item" target="_blank" href="https://gogs.io/docs" rel="noreferrer">{{.i18n.Tr "help"}}</a>
 									<div class="right menu">
 										{{if .ShowRegistrationButton}}
 											<a class="item{{if .PageIsSignUp}} active{{end}}" href="{{AppSubUrl}}/user/sign_up">

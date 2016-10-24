@@ -1,0 +1,146 @@
+{{template "base/head" .}}
+<script type="text/javascript">
+	$( document ).ready(function() {
+    	$("#semester_dropdown").click(function() {
+			$("#semester_dropdown").removeClass( "error" );
+		});
+
+		$("#subject_dropdown").click(function() {
+			$("#subject_dropdown").removeClass( "error" );
+		});
+
+		$("#group_dropdown").click(function() {
+			$("#group_dropdown").removeClass( "error" );
+		});
+
+		$("#create-subject").click(function(){
+			$('.ui.modal').modal('show');
+		});
+	});
+</script>
+<div class="user course">
+	<div class="ui container">
+		<div class="ui grid">
+			{{template "user/settings/navbar" .}}
+			<div class="twelve wide column content">
+				{{template "base/alert" .}}
+				<div class="ui positive message hide" id="divMensajeMateria">
+					<p id="mensajeMateria"></p>
+				</div>
+				<h4 class="ui top attached header">
+					{{.i18n.Tr "user.settings.new_course"}}
+				</h4>
+				<div class="ui attached segment">
+					<form class="ui form" action="{{.Link}}" method="post">
+						{{.CsrfTokenHtml}}
+
+						<div class="field {{if .Err_Course}}error{{end}}" id="semester_dropdown">
+							<label>{{.i18n.Tr "repo.semester"}}</label>
+							<div class="ui search selection dropdown">
+								<input type="hidden" name="semester" value="{{.semester}}" id="semester_hidden">
+								<div class="default text">{{.i18n.Tr "repo.select_semester"}}</div>
+								<i class="dropdown icon"></i>
+								<div class="menu">
+									{{range .Semesters}}
+										<div class="item" data-value="{{.ID}}">{{.Name}}</div>
+									{{end}}
+								</div>
+							</div>
+						</div>
+
+						<div class="field {{if .Err_Course}}error{{end}}" id="group_dropdown">
+							<label>{{.i18n.Tr "repo.group"}}</label>
+							<div class="ui search selection dropdown">
+								<input type="hidden" name="group" value="{{.group}}" id="group_hidden">
+								<div class="default text">{{.i18n.Tr "repo.select_group"}}</div>
+								<i class="dropdown icon"></i>
+								<div class="menu">
+									{{range .Groups}}
+										<div class="item" data-value="{{.ID}}">{{.Name}}</div>
+									{{end}}
+								</div>
+							</div>
+						</div>
+
+						<div class="inline field {{if .Err_Course}}error{{end}}" id="subject_dropdown">
+							<label>{{.i18n.Tr "repo.subject"}}</label>
+							<div style="height: 5px;"></div>
+							<!--<div class="ui search selection dropdown" id="subject-box-insert">-->
+							<div class="ui search selection dropdown" style="width: 94%;" id="SubjectBox">
+								<input type="hidden" name="subject" value="{{.subject}}" id="subject_hidden">
+								<div class="default text">{{.i18n.Tr "repo.select_subject"}}</div>
+								<i class="dropdown icon"></i>
+								<div class="menu" id="menuSubject"></div>
+							</div>
+							<a target="_blank" class="ui icon button green" style="left: 1%; position:relative;" title="Registrar Materia" id="create-subject">
+								<i class="plus icon"></i>
+							</a>
+						</div>
+
+						<div class="inline field">
+							<div class="ui checkbox">
+								<label><strong>{{.i18n.Tr "user.settings.active_course"}}</strong></label>
+								<input name="estatus" type="checkbox" checked>
+							</div>
+						</div>
+
+						<div class="field">
+							<button class="ui green button">{{.i18n.Tr "user.settings.create_course"}}</button>
+						</div>
+					</form>
+					<script>
+						$("form").submit(function( event ) {
+							var semester = $("#semester_hidden").val();
+							var group = $("#group_hidden").val();
+							var subject = $("#subject_hidden").val();
+
+							if(semester == "" || semester.length == 0){
+								$("#semester_dropdown").addClass( "error" );
+								event.preventDefault();
+							}else{
+								$("#semester_dropdown").removeClass( "error" );
+							}
+
+							if(group == "" || group.length == 0){
+								$("#group_dropdown").addClass( "error" );
+								event.preventDefault();
+							}else{
+								$("#group_dropdown").removeClass( "error" );
+							}							
+
+							if(subject == "" || subject.length == 0){
+								$("#subject_dropdown").addClass( "error" );
+								event.preventDefault();
+							}else{
+								$("#subject_dropdown").removeClass( "error" );
+							}
+						});
+					</script>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+<div class="ui modal">
+	<i class="close icon"></i>
+	<div class="header">
+		{{.i18n.Tr "user.settings.proffesor.create_subject"}}
+	</div>
+	<div class="ui attached segment">
+		<div class="ui error message hide" id="divMensajeMateriaError">
+			<p id="">La Materia ya se encuentra registrada</p>
+		</div>
+		<form class="ui form" method="post" id="form-registrarMateria">
+			{{.CsrfTokenHtml}}
+
+			<div class="inline required field ">
+				<label for="subject_name">{{.i18n.Tr "repo.subject"}}</label>
+				<input id="subject_modal" value="" autofocus="" required>
+			</div>
+			<div class="field">
+				<button class="ui green button">Registrar Materia</button>
+			</div>
+		</form>
+	</div>
+</div>
+{{template "base/footer" .}}

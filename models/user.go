@@ -39,6 +39,7 @@ type UserType int
 const (
 	USER_TYPE_INDIVIDUAL UserType = iota // Historic reason to make it starts at 0.
 	USER_TYPE_ORGANIZATION
+	USER_TYPE_PROFESSOR
 )
 
 var (
@@ -105,6 +106,9 @@ type User struct {
 	NumMembers  int
 	Teams       []*Team `xorm:"-"`
 	Members     []*User `xorm:"-"`
+
+	// For professor
+	Subjects	[]*Subject  `xorm:"-"`
 }
 
 func (u *User) BeforeInsert() {
@@ -391,6 +395,11 @@ func (u *User) IsWriterOfRepo(repo *Repository) bool {
 	return has
 }
 
+// IsProfessor returns true if user is actually a organization.
+func (u *User) IsProfessor() bool {
+	return u.Type == USER_TYPE_PROFESSOR
+}
+
 // IsOrganization returns true if user is actually a organization.
 func (u *User) IsOrganization() bool {
 	return u.Type == USER_TYPE_ORGANIZATION
@@ -404,6 +413,15 @@ func (u *User) IsUserOrgOwner(orgId int64) bool {
 // IsPublicMember returns true if user public his/her membership in give organization.
 func (u *User) IsPublicMember(orgId int64) bool {
 	return IsPublicMembership(orgId, u.ID)
+}
+
+func (u *User) getSubjectCount(e Engine) (int64, error) {
+	return e.Where("uid=?", u.ID).GroupBy("subj_id").Count(new(Course))
+}
+
+// GetOrganizationCount returns count of membership of organization of user.
+func (u *User) GetSubjectCount() (int64, error) {
+	return u.getSubjectCount(x)
 }
 
 func (u *User) getOrganizationCount(e Engine) (int64, error) {
@@ -566,7 +584,7 @@ func CreateUser(u *User) (err error) {
 }
 
 func countUsers(e Engine) int64 {
-	count, _ := e.Where("type=0").Count(new(User))
+	count, _ := e.Where("type=0").And("prohibit_login = ?", false).Count(new(User))
 	return count
 }
 
@@ -578,7 +596,7 @@ func CountUsers() int64 {
 // Users returns number of users in given page.
 func Users(page, pageSize int) ([]*User, error) {
 	users := make([]*User, 0, pageSize)
-	return users, x.Limit(pageSize, (page-1)*pageSize).Where("type=0").Asc("id").Find(&users)
+	return users, x.Limit(pageSize, (page-1)*pageSize).Where("type=0").And("prohibit_login = ?", false).Asc("id").Find(&users)
 }
 
 // get user by erify code
@@ -772,6 +790,7 @@ func deleteUser(e *xorm.Session, u *User) error {
 		&Action{UserID: u.ID},
 		&IssueUser{UID: u.ID},
 		&EmailAddress{UID: u.ID},
+		&Course{Uid: u.ID},
 	); err != nil {
 		return fmt.Errorf("deleteBeans: %v", err)
 	}
@@ -1032,10 +1051,12 @@ func SearchUserByName(opts *SearchUserOptions) (users []*User, _ int64, _ error)
 	}
 
 	searchQuery := "%" + opts.Keyword + "%"
+	log.Trace(searchQuery)
 	users = make([]*User, 0, opts.PageSize)
 	// Append conditions
 	sess := x.Where("LOWER(lower_name) LIKE ?", searchQuery).
 		Or("LOWER(full_name) LIKE ?", searchQuery).
+		Or("email LIKE ?", searchQuery).
 		And("type = ?", opts.Type)
 
 	var countSess xorm.Session

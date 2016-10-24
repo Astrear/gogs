@@ -160,6 +160,13 @@ type Repository struct {
 	Website       string
 	DefaultBranch string
 
+	//** METADATOS ESCOLARES
+	ProfessorID int64
+	SubjectID   int64
+	SemesterID  int64
+	GroupID     int64
+	//**
+
 	NumWatches          int
 	NumStars            int
 	NumForks            int
@@ -189,7 +196,7 @@ type Repository struct {
 	ExternalTrackerFormat string
 	ExternalTrackerStyle  string
 	ExternalMetas         map[string]string `xorm:"-"`
-	EnablePulls           bool              `xorm:"NOT NULL DEFAULT true"`
+	EnablePulls           bool              `xorm:"NOT NULL DEFAULT false"`
 
 	IsFork   bool `xorm:"NOT NULL DEFAULT false"`
 	ForkID   int64
@@ -464,6 +471,82 @@ func (repo *Repository) DescriptionHtml() template.HTML {
 	}
 	return template.HTML(DescPattern.ReplaceAllStringFunc(markdown.Sanitizer.Sanitize(repo.Description), sanitize))
 }
+
+/*
+Funciones para metadatos escolares
+*/
+func (repo *Repository) GetProfessor() (*User, error) {
+	profesor, err := GetUserByID(repo.ProfessorID)
+	if err != nil {
+		return nil, err
+	}
+	return profesor, err
+}
+
+func (repo *Repository) GetSubject() (*Subject, error) {
+	subject, err := GetSubjectByID(repo.SubjectID)
+	if err != nil {
+		return nil, err
+	}
+
+	return subject, err
+}
+
+func (repo *Repository) GetSemester() (*Semester, error) {
+	semester, err := GetSemesterByID(repo.SemesterID)
+	if err != nil {
+		return nil, err
+	}
+
+	return semester, err
+}
+
+func (repo *Repository) GetGroup() (*Group, error) {
+	group, err := GetGroupByID(repo.GroupID)
+	if err != nil {
+		return nil, err
+	}
+
+	return group, err
+}
+
+func (repo *Repository) GetProfessorName() string {
+	profesor, err := GetUserByID(repo.ProfessorID)
+	if err != nil {
+		return ""
+	}
+
+	return profesor.FullName
+}
+
+func (repo *Repository) GetSubjectName() string {
+	subject, err := GetSubjectByID(repo.SubjectID)
+	if err != nil {
+		return ""
+	}
+
+	return subject.Name
+}
+
+func (repo *Repository) GetSemesterName() string {
+	semester, err := GetSemesterByID(repo.SemesterID)
+	if err != nil {
+		return ""
+	}
+
+	return semester.Name
+}
+
+func (repo *Repository) GetGroupName() string {
+	group, err := GetGroupByID(repo.GroupID)
+	if err != nil {
+		return ""
+	}
+
+	return group.Name
+}
+
+//Fin metadatos escolares
 
 func (repo *Repository) LocalCopyPath() string {
 	return path.Join(setting.AppDataPath, "tmp/local-rpeo", com.ToStr(repo.ID))
@@ -767,6 +850,12 @@ type CreateRepoOptions struct {
 	IsPrivate   bool
 	IsMirror    bool
 	AutoInit    bool
+	//**AGREGADOS
+	Tags        string
+	SemesterID  int64
+	GroupID     int64
+	ProfessorID int64
+	SubjectID   int64
 }
 
 func getRepoInitFile(tp, name string) ([]byte, error) {
@@ -954,12 +1043,18 @@ func CreateRepository(u *User, opts CreateRepoOptions) (_ *Repository, err error
 	}
 
 	repo := &Repository{
-		OwnerID:      u.ID,
-		Owner:        u,
-		Name:         opts.Name,
-		LowerName:    strings.ToLower(opts.Name),
-		Description:  opts.Description,
-		IsPrivate:    opts.IsPrivate,
+		OwnerID:     u.ID,
+		Owner:       u,
+		Name:        opts.Name,
+		LowerName:   strings.ToLower(opts.Name),
+		Description: opts.Description,
+		IsPrivate:   opts.IsPrivate,
+		//METATADOS ESCOLARES
+		GroupID:     opts.GroupID,
+		SemesterID:  opts.SemesterID,
+		ProfessorID: opts.ProfessorID,
+		SubjectID:   opts.SubjectID,
+		//FIN METADATOS
 		EnableWiki:   true,
 		EnableIssues: true,
 		EnablePulls:  true,
@@ -1335,6 +1430,7 @@ func DeleteRepository(uid, repoID int64) error {
 		&Release{RepoID: repoID},
 		&Collaboration{RepoID: repoID},
 		&PullRequest{BaseRepoID: repoID},
+		&TagsRepo{RepoID: repoID},
 	); err != nil {
 		return fmt.Errorf("deleteBeans: %v", err)
 	}
@@ -1495,6 +1591,20 @@ type SearchRepoOptions struct {
 	PageSize int // Can be smaller than or equal to setting.ExplorePagingNum
 }
 
+
+type AdvancedSearchRepoOptions struct {
+	Keyword  string
+	Prof     string
+	Subj     string
+	Group 	 string
+	Sem      string
+	OwnerID  int64
+	OrderBy  string
+	Private  bool // Include private repositories in results
+	Page     int
+	PageSize int // Can be smaller than or equal to setting.ExplorePagingNum
+}
+
 // SearchRepositoryByName takes keyword and part of repository name to search,
 // it returns results in given range and number of total results.
 func SearchRepositoryByName(opts *SearchRepoOptions) (repos []*Repository, _ int64, _ error) {
@@ -1510,7 +1620,20 @@ func SearchRepositoryByName(opts *SearchRepoOptions) (repos []*Repository, _ int
 	repos = make([]*Repository, 0, opts.PageSize)
 
 	// Append conditions
-	sess := x.Where("LOWER(lower_name) LIKE ?", "%"+opts.Keyword+"%")
+	sess := x.Cols("repository.name, repository.owner_id, repository.description, repository.is_mirror, repository.is_private, repository.updated_unix, repository.num_stars").
+		Join("INNER", "semester", "repository.semester_id = semester.id").
+		Join("INNER", "user", "repository.professor_id = user.id").
+		Join("INNER", "subject", "repository.subject_id = subject.id").
+		Join("INNER", "group", "repository.group_id = group.id").
+		Join("INNER", "tags_repo", "repository.id = tags_repo.repo_id").
+		Join("INNER", "tag", "tags_repo.tag_id = tag.id").
+		Where("LOWER(repository.lower_name) LIKE ?", "%"+opts.Keyword+"%").
+		Or("LOWER(semester.name) LIKE ?", "%"+opts.Keyword+"%").
+		Or("LOWER(user.full_name) LIKE ?", "%"+opts.Keyword+"%").
+		Or("LOWER(subject.name) LIKE ?", "%"+opts.Keyword+"%").
+		Or("LOWER(tag.etiqueta) LIKE ?", "%"+opts.Keyword+"%").
+		Or("LOWER(group.name) LIKE ?", "%"+opts.Keyword+"%")
+
 	if opts.OwnerID > 0 {
 		sess.And("owner_id = ?", opts.OwnerID)
 	}
@@ -1528,7 +1651,73 @@ func SearchRepositoryByName(opts *SearchRepoOptions) (repos []*Repository, _ int
 	if len(opts.OrderBy) > 0 {
 		sess.OrderBy(opts.OrderBy)
 	}
-	return repos, count, sess.Limit(opts.PageSize, (opts.Page-1)*opts.PageSize).Find(&repos)
+	return repos, count, sess.Limit(opts.PageSize, (opts.Page-1)*opts.PageSize).GroupBy("repository.id").Find(&repos)
+}
+
+
+func AdvancedSearchRepositoryByName(opts *AdvancedSearchRepoOptions) (repos []*Repository, _ int64, _ error) {
+	if len(opts.Keyword) != 0 {
+		opts.Keyword = strings.ToLower(opts.Keyword)
+	}
+
+	if opts.Page <= 0 {
+		opts.Page = 1
+	}
+	log.Trace(opts.Keyword)
+	repos = make([]*Repository, 0, opts.PageSize)
+
+	// Append conditions
+	
+	sess := x.Cols("repository.name, repository.owner_id, repository.description, repository.is_mirror, repository.is_private, repository.updated_unix, repository.num_stars")
+
+	//.Cols("repository.name, repository.owner_id, repository.description, repository.is_mirror, repository.is_private, repository.updated_unix, repository.num_stars")
+
+	if opts.Prof != "" {
+		sess.Join("INNER", "user", "repository.professor_id = user.id")
+	}
+	if opts.Subj != "" {
+		sess.Join("INNER", "subject", "repository.subject_id = subject.id")
+	}
+	if opts.Group != "" {
+		sess.Join("INNER", "group", "repository.group_id = group.id")
+	}
+	if opts.Sem != "" {
+		sess.Join("INNER", "semester", "repository.semester_id = semester.id")
+	}
+
+	sess.Where("LOWER(repository.lower_name) LIKE ?", "%"+opts.Keyword+"%").
+	Or("LOWER(repository.description) LIKE ?", "%"+opts.Keyword+"%")
+
+	if opts.Prof != "" {
+		sess.And("user.full_name = ?", opts.Prof)
+	}
+	if opts.Subj != "" {
+		sess.And("subject.name = ?", opts.Subj)
+	}
+	if opts.Group != "" {
+		sess.And("group.name = ?", opts.Group)
+	}
+	if opts.Sem != "" {
+		sess.And("semester.name = ?", opts.Sem)
+	}
+
+	if !opts.Private {
+		sess.And("is_private=?", false)
+	}
+
+	
+
+	var countSess xorm.Session
+	countSess = *sess
+	count, err := countSess.Count(new(Repository))
+	if err != nil {
+		return nil, 0, fmt.Errorf("Count: %v", err)
+	}
+
+	if len(opts.OrderBy) > 0 {
+		sess.OrderBy(opts.OrderBy)
+	}
+	return repos, count, sess.Limit(opts.PageSize, (opts.Page-1)*opts.PageSize).GroupBy("repository.id").Find(&repos)
 }
 
 // DeleteRepositoryArchives deletes all repositories' archives.
@@ -2105,4 +2294,92 @@ func (repo *Repository) CreateNewBranch(doer *User, oldBranchName, branchName st
 	}
 
 	return nil
+}
+
+/////////////////////////
+/////////////////////////
+//******TAGS_REPO******
+/////////////////////////
+/////////////////////////
+type TagsRepo struct {
+	ID     int64 `xorm:"pk autoincr"`
+	TagID  int64 `xorm:"UNIQUE(s)"`
+	RepoID int64 `xorm:"UNIQUE(s)"`
+}
+
+// Star or unstar repository.
+func LinkTagtoRepo(tagID, repoID int64, linked bool) (err error) {
+	if linked {
+		if IsTagLinked(tagID, repoID) {
+			return nil
+		}
+		if _, err = x.Insert(&TagsRepo{TagID: tagID, RepoID: repoID}); err != nil {
+			return err
+		}
+	} else {
+		if !IsTagLinked(tagID, repoID) {
+			return nil
+		}
+		if _, err = x.Delete(&TagsRepo{0, tagID, repoID}); err != nil {
+			return err
+		}
+	}
+	return err
+}
+
+// IsStaring checks if user has starred given repository.
+func IsTagLinked(tagID, repoID int64) bool {
+	has, _ := x.Get(&TagsRepo{0, tagID, repoID})
+	return has
+}
+
+func GetTagsRepo(repoID int64) ([]*TagsRepo, error) {
+	tagsrepo := make([]*TagsRepo, 0, 10)
+	return tagsrepo, x.Find(&tagsrepo, &TagsRepo{RepoID: repoID})
+}
+
+func GetTagsOfRepo(repoID int64) ([]*Tag, error) {
+	tagsrepo, err := GetTagsRepo(repoID)
+	tags := make([]*Tag, 0, len(tagsrepo))
+	for _, tagrepo := range tagsrepo {
+		tag, _ := GetTagByID(tagrepo.TagID)
+		tags = append(tags, tag)
+	}
+
+	return tags, err
+}
+
+func (r *Repository) GetTags() ([]*Tag, error) {
+	tagsrepo, err := GetTagsRepo(r.ID)
+	tags := make([]*Tag, 0, len(tagsrepo))
+	for _, tagrepo := range tagsrepo {
+		tag, _ := GetTagByID(tagrepo.TagID)
+		tags = append(tags, tag)
+	}
+
+	return tags, err
+}
+
+func UnlinkTagRepo(repoID int64, tagID int64) bool {
+	if _, err := x.Delete(&TagsRepo{0, tagID, repoID}); err != nil {
+		return false
+	}
+
+	return true
+}
+
+func (repo *Repository) TagsHtml() template.HTML {
+	sanitize := func(s string) string {
+		return fmt.Sprintf(`<a href="%[1]s" target="_blank">%[1]s</a>`, s)
+	}
+
+	tagsrepo, _ := GetTagsRepo(repo.ID)
+
+	tagsHTML := ""
+	for _, tagRepo := range tagsrepo {
+		tag, _ := GetTagByID(tagRepo.TagID)
+		tagsHTML += "<a href='/explore/repos?q=" + tag.Etiqueta + "'>#" + tag.Etiqueta + "</a> "
+	}
+
+	return template.HTML(DescPattern.ReplaceAllStringFunc(markdown.Sanitizer.Sanitize(tagsHTML), sanitize))
 }

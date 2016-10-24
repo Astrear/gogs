@@ -575,6 +575,21 @@ function initRepositoryCollaboration() {
     });
 }
 
+function initCourses() {
+    console.log('initCourses');
+
+    // Change course status
+    $('.access-mode.menu .item').click(function () {
+        console.log('test')
+        var $menu = $(this).parent();
+        $.post($menu.data('url'), {
+            "_csrf": csrf,
+            "sid": $menu.data('sid'),
+            "status": $(this).data('value')
+        })
+    });
+}
+
 function initWikiForm() {
     var $editArea = $('.repository.wiki textarea#edit_area');
     if ($editArea.length > 0) {
@@ -1071,7 +1086,7 @@ function searchUsers() {
     $searchUserBox.keyup(function () {
         var $this = $(this);
         var keyword = $this.find('input').val();
-        if (keyword.length < 2) {
+        if (keyword.length < 1) {
             $results.hide();
             return;
         }
@@ -1111,6 +1126,184 @@ function searchUsers() {
         $searchUserBox.keyup();
     });
     hideWhenLostFocus('#search-user-box .results', '#search-user-box');
+}
+
+function getSubjects(){
+    var $SubjectsBox = $("#SubjectBox");
+    var $results = $SubjectsBox.find('.menu');
+    $SubjectsBox.click(function(){
+        var $this = $(this);
+        $.ajax({
+            url: suburl + '/api/v1/subjects/list',
+            dataType: "json",
+            success: function (response) {
+
+                $results.html('');
+
+                if (response.ok && response.data.length) {
+                    var html = '';
+                    $.each(response.data, function (i, item) {
+                        html += '<div class="item" data-value="'+item.id+'">'+item.name+'</div>';
+                    });
+                    $results.html(html);
+                } else {
+                    $results.hide();
+                }
+            }
+        });
+    });
+}
+
+function searchTags() {
+    var $searchTagBox = $('#tag-box');
+    var $results = $searchTagBox.find('.menu');
+
+    $searchTagBox.click(function () {
+        var $this = $(this);
+        $.ajax({
+            url: suburl + '/api/v1/tags/search',
+            dataType: "json",
+            success: function (response) {
+
+                $results.html('');
+
+                if (response.ok && response.data.length) {
+                    var html = '';
+                    $.each(response.data, function (i, item) {
+                        html += '<div class="item" data-value="'+item.id+'">'+item.etiqueta+'</div>';
+                    });
+                    $results.html(html);
+                    $results.show();
+                } else {
+                    $results.hide();
+                }
+            }
+        });
+    });
+}
+
+function getSubjectsFromProfessor(){
+    var $subjectsBox = $("#subject-box");
+    var $semesterBox = $("#semester-box");
+    var $groupBox = $("#group-box");
+    var $inputProfessor = $("#professor");
+    $inputProfessor.change(function (){
+
+        var $this = $(this);
+        var keyword = $this.val();
+        //GET SUBJECTS
+        $.ajax({
+            url: suburl + '/api/v1/subjects/searchByProfessor?q=' + keyword,
+            dataType: "json",
+            success: function (response) {
+                var notEmpty = function (str) {
+                    return str && str.length > 0;
+                };
+
+                $subjectsBox.html('');
+
+                if (response.ok && response.data.length) {
+                    var html = '';
+                    $.each(response.data, function (i, item) {
+                        html += '<div class="item" data-value="'+item.id+'">'+item.name+'</div>';
+                    });
+                    $subjectsBox.html(html);
+                } else {
+                    $subjectsBox.hide();
+                }
+            }
+        });
+        //GET SEMESTERS
+        $.ajax({
+            url: suburl + '/api/v1/semesters/searchByProfessor?q=' + keyword,
+            dataType: "json",
+            success: function (response) {
+                var notEmpty = function (str) {
+                    return str && str.length > 0;
+                };
+
+                $semesterBox.html('');
+
+                if (response.ok && response.data.length) {
+                    var html = '';
+                    $.each(response.data, function (i, item) {
+                        html += '<div class="item" data-value="'+item.id+'">'+item.name+'</div>';
+                    });
+                    $semesterBox.html(html);
+                } else {
+                    $semesterBox.hide();
+                }
+            }
+        });
+        //GET GROUPS
+        $.ajax({
+            url: suburl + '/api/v1/groups/searchByProfessor?q=' + keyword,
+            dataType: "json",
+            success: function (response) {
+                var notEmpty = function (str) {
+                    return str && str.length > 0;
+                };
+
+                $groupBox.html('');
+
+                if (response.ok && response.data.length) {
+                    var html = '';
+                    $.each(response.data, function (i, item) {
+                        html += '<div class="item" data-value="'+item.id+'">'+item.name+'</div>';
+                    });
+                    $groupBox.html(html);
+                } else {
+                    $groupBox.hide();
+                }
+            }
+        });
+    });
+}
+
+function searchSubjects() {
+    if (!$('#search-subject-box .results').length) {
+        return;
+    }
+
+    var $searchSubjectBox = $('#search-subject-box');
+    var $results = $searchSubjectBox.find('.results');
+    $searchSubjectBox.keyup(function () {
+        var $this = $(this);
+        var keyword = $this.find('input').val();
+        $.ajax({
+            url: suburl + '/api/v1/subjects/search?q=' + keyword,
+            dataType: "json",
+            success: function (response) {
+                var notEmpty = function (str) {
+                    return str && str.length > 0;
+                };
+
+                $results.html('<div class="menu transition hidden" tabindex="-1">');
+
+                if (response.ok && response.data.length) {
+                    var html = '';
+                    $.each(response.data, function (i, item) {
+                        html += '<div class="item"><img class="ui avatar image" src="/img/subject.png"><span class="username">' + item.name + '</span>';
+                        html += '</div>';
+                    });
+                    $results.html(html + "</div>");
+
+
+                    $this.find('.results .item').click(function () {
+                        $this.find('input').val($(this).find('.username').text());
+                        $results.hide();
+                    });
+                    $results.show();
+                } else {
+                    $results.hide();
+                }
+            }
+        });
+    });
+    $searchSubjectBox.find('input').focus(function () {
+        $searchSubjectBox.keyup();
+    });
+    hideWhenLostFocus('#search-subject-box .results', '#search-subject-box');
 }
 
 // FIXME: merge common parts in two functions
@@ -1191,6 +1384,66 @@ function initCodeView() {
     }
 }
 
+function registrarTag(){
+    var $form = $("#form-registrarTag");
+    $form.submit(function( event ) {
+        var tag = $("#tag_modal").val();
+        $.ajax({
+            url: suburl + '/api/v1/tags/create?t=' + tag,
+            dataType: "json",
+            success: function (response) {
+                var notEmpty = function (str) {
+                    return str && str.length > 0;
+                };
+
+                if (response.ok && response.data.length) {
+                    $.each(response.data, function (i, item) {
+                        $('.ui.modal').modal('hide');
+                        $("#divMensajeTagError").hide();
+                        $("#mensajeTag").html("Se ha registrado la tag: " + item.etiqueta)
+                        $("#divMensajeTag").show();
+                        $("#tag_modal").val("");
+                    });
+                }
+            },
+            error: function(response){
+                $("#divMensajeTagError").show();
+            }
+        });
+        event.preventDefault();
+    });
+}
+
+function registrarMateria(){
+    var $form = $("#form-registrarMateria");
+    $form.submit(function( event ) {
+        var $subject = $("#subject_modal").val();
+        $.ajax({
+            url: suburl + '/api/v1/subjects/create?s=' + $subject,
+            dataType: "json",
+            success: function (response) {
+                var notEmpty = function (str) {
+                    return str && str.length > 0;
+                };
+
+                if (response.ok && response.data.length) {
+                    $.each(response.data, function (i, item) {
+                        $('.ui.modal').modal('hide');
+                        $("#divMensajeMateriaError").hide();
+                        $("#mensajeMateria").html("Se ha registrado la materia: " + item.name)
+                        $("#divMensajeMateria").show();
+                        $("#subject_modal").val("");
+                    });
+                }
+            },
+            error: function(response){
+                $("#divMensajeMateriaError").show();
+            }
+        });
+        event.preventDefault();
+    });
+}
+
 $(document).ready(function () {
     csrf = $('meta[name=_csrf]').attr("content");
     suburl = $('meta[name=_suburl]').attr("content");
@@ -1201,7 +1454,14 @@ $(document).ready(function () {
     });
 
     // Semantic UI modules.
-    $('.dropdown').dropdown();
+    $('.ui.dropdown').dropdown({
+        message: {
+          addResult     : 'Add <b>{term}</b>',
+          count         : '{count} selected',
+          maxSelections : 'Max {maxCount} selections',
+          noResults     : 'Sin resultados.'
+        },
+      });
     $('.jump.dropdown').dropdown({
         action: 'hide',
         onShow: function () {
@@ -1307,6 +1567,16 @@ $(document).ready(function () {
     });
 
     // Helpers.
+     $('.activate-button').click(function () {
+        var $this = $(this);
+        $.post($this.data('url'), {
+            "_csrf": csrf,
+            "id": $this.data("id")
+        }).done(function (data) {
+            window.location.href = data.redirect;
+        });
+        return false;
+    });
     $('.delete-button').click(function () {
         var $this = $(this);
         $('.delete.modal').modal({
@@ -1364,7 +1634,13 @@ $(document).ready(function () {
 
     buttonsClickOnEnter();
     searchUsers();
+    searchSubjects();
     searchRepositories();
+    searchTags();
+    getSubjectsFromProfessor();
+    getSubjects();
+    registrarMateria();
+    registrarTag();
 
     initCommentForm();
     initInstall();
@@ -1393,7 +1669,8 @@ $(document).ready(function () {
 
     var routes = {
         'div.user.settings': initUserSettings,
-        'div.repository.settings.collaboration': initRepositoryCollaboration
+        'div.repository.settings.collaboration': initRepositoryCollaboration,
+        'div.user.course': initCourses
     };
 
     var selector;

@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"strconv"
 	"strings"
 
 	"github.com/Unknwon/com"
@@ -64,6 +65,43 @@ func checkContextUser(ctx *context.Context, uid int64) *models.User {
 	return org
 }
 
+func PrepareInfoCreateRepo(ctx *context.Context) {
+	tags, err := models.GetTags()
+	if err != nil {
+		ctx.Handle(500, "GetTags", err)
+		return
+	}
+	ctx.Data["Tags"] = tags
+
+	subjects, err := models.GetSubjects()
+	if err != nil {
+		ctx.Handle(500, "GetSubjects", err)
+		return
+	}
+	ctx.Data["Subjects"] = subjects
+
+	semesters, err := models.GetSemesters()
+	if err != nil {
+		ctx.Handle(500, "GetSemesters", err)
+		return
+	}
+	ctx.Data["Semesters"] = semesters
+
+	groups, err := models.GetGroups()
+	if err != nil {
+		ctx.Handle(500, "GetGroups", err)
+		return
+	}
+	ctx.Data["Groups"] = groups
+
+	professors, err := models.GetProfessors()
+	if err != nil {
+		ctx.Handle(500, "GetProfessors", err)
+		return
+	}
+	ctx.Data["Professors"] = professors
+}
+
 func Create(ctx *context.Context) {
 	ctx.Data["Title"] = ctx.Tr("new_repo")
 
@@ -72,8 +110,11 @@ func Create(ctx *context.Context) {
 	ctx.Data["Licenses"] = models.Licenses
 	ctx.Data["Readmes"] = models.Readmes
 	ctx.Data["readme"] = "Default"
-	ctx.Data["private"] = ctx.User.LastRepoVisibility
+	ctx.Data["private"] = false
 	ctx.Data["IsForcedPrivate"] = setting.Repository.ForcePrivate
+	ctx.Data["auto_init"] = true
+
+	PrepareInfoCreateRepo(ctx)
 
 	ctxUser := checkContextUser(ctx, ctx.QueryInt64("org"))
 	if ctx.Written() {
@@ -87,15 +128,19 @@ func Create(ctx *context.Context) {
 func handleCreateError(ctx *context.Context, owner *models.User, err error, name string, tpl base.TplName, form interface{}) {
 	switch {
 	case models.IsErrReachLimitOfRepo(err):
+		PrepareInfoCreateRepo(ctx)
 		ctx.RenderWithErr(ctx.Tr("repo.form.reach_limit_of_creation", owner.RepoCreationNum()), tpl, form)
 	case models.IsErrRepoAlreadyExist(err):
 		ctx.Data["Err_RepoName"] = true
+		PrepareInfoCreateRepo(ctx)
 		ctx.RenderWithErr(ctx.Tr("form.repo_name_been_taken"), tpl, form)
 	case models.IsErrNameReserved(err):
 		ctx.Data["Err_RepoName"] = true
+		PrepareInfoCreateRepo(ctx)
 		ctx.RenderWithErr(ctx.Tr("repo.form.name_reserved", err.(models.ErrNameReserved).Name), tpl, form)
 	case models.IsErrNamePatternNotAllowed(err):
 		ctx.Data["Err_RepoName"] = true
+		PrepareInfoCreateRepo(ctx)
 		ctx.RenderWithErr(ctx.Tr("repo.form.name_pattern_not_allowed", err.(models.ErrNamePatternNotAllowed).Pattern), tpl, form)
 	default:
 		ctx.Handle(500, name, err)
@@ -128,8 +173,25 @@ func CreatePost(ctx *context.Context, form auth.CreateRepoForm) {
 		Readme:      form.Readme,
 		IsPrivate:   form.Private || setting.Repository.ForcePrivate,
 		AutoInit:    form.AutoInit,
+		Tags:        form.Tags,
+		SemesterID:  form.Semester,
+		GroupID:     form.Group,
+		ProfessorID: form.Professor,
+		SubjectID:   form.Subject,
 	})
 	if err == nil {
+
+		arr_tags := strings.Split(form.Tags, ",")
+		for _, tag := range arr_tags {
+			tagID, _ := strconv.ParseInt(tag, 10, 64)
+			models.LinkTagtoRepo(tagID, repo.ID, true)
+		}
+
+		if form.Professor != 0 {
+			//Agregar profesor como colaborador a repositorio con permisos de lectura
+			models.AddCollaboratorProfessor(form.Professor, repo.ID)
+		}
+
 		log.Trace("Repository created [%d]: %s/%s", repo.ID, ctxUser.Name, repo.Name)
 		ctx.Redirect(setting.AppSubUrl + "/" + ctxUser.Name + "/" + repo.Name)
 		return

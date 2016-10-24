@@ -16,9 +16,12 @@ import (
 	"github.com/gogits/gogs/modules/auth"
 	"github.com/gogits/gogs/modules/context"
 	"github.com/gogits/gogs/routers/api/v1/admin"
+	"github.com/gogits/gogs/routers/api/v1/group"
 	"github.com/gogits/gogs/routers/api/v1/misc"
 	"github.com/gogits/gogs/routers/api/v1/org"
 	"github.com/gogits/gogs/routers/api/v1/repo"
+	"github.com/gogits/gogs/routers/api/v1/semester"
+	"github.com/gogits/gogs/routers/api/v1/subject"
 	"github.com/gogits/gogs/routers/api/v1/user"
 )
 
@@ -177,6 +180,11 @@ func RegisterRoutes(m *macaron.Macaron) {
 		m.Post("/markdown", bind(api.MarkdownOption{}), misc.Markdown)
 		m.Post("/markdown/raw", misc.MarkdownRaw)
 
+		m.Group("/tags", func() {
+			m.Get("/search", repo.SearchTag)
+			m.Get("/create", repo.CreateTag)
+		})
+
 		// Users
 		m.Group("/users", func() {
 			m.Get("/search", user.Search)
@@ -222,6 +230,24 @@ func RegisterRoutes(m *macaron.Macaron) {
 					Delete(user.DeletePublicKey)
 			})
 		}, reqToken())
+
+		//Subjects
+		m.Group("/subjects", func() {
+			m.Get("/search", subject.Search)
+			m.Get("/searchByProfessor", subject.SearchByProfessor)
+			m.Get("/create", subject.CreateSubject)
+			m.Get("/list", subject.List)
+		})
+
+		//Semesters
+		m.Group("/semesters", func() {
+			m.Get("/searchByProfessor", semester.SearchByProfessor)
+		})
+
+		//Groups
+		m.Group("/groups", func() {
+			m.Get("/searchByProfessor", group.SearchByProfessor)
+		})
 
 		// Repositories
 		m.Combo("/user/repos", reqToken()).Get(repo.ListMyRepos).

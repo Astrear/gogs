@@ -62,9 +62,11 @@ func (f *InstallForm) Validate(ctx *macaron.Context, errs binding.Errors) bindin
 
 type RegisterForm struct {
 	UserName string `binding:"Required;AlphaDashDot;MaxSize(35)"`
+	FullName string `binding:"Required;MaxSize(60)"`
 	Email    string `binding:"Required;Email;MaxSize(254)"`
 	Password string `binding:"Required;MaxSize(255)"`
 	Retype   string
+	Type 	 bool
 }
 
 func (f *RegisterForm) Validate(ctx *macaron.Context, errs binding.Errors) binding.Errors {
@@ -121,6 +123,14 @@ type AddEmailForm struct {
 }
 
 func (f *AddEmailForm) Validate(ctx *macaron.Context, errs binding.Errors) binding.Errors {
+	return validate(errs, ctx.Data, f, ctx.Locale)
+}
+
+type AddSubjectForm struct {
+	Subject string `binding:"Required;MaxSize(254)"`
+}
+
+func (f *AddSubjectForm) Validate(ctx *macaron.Context, errs binding.Errors) binding.Errors {
 	return validate(errs, ctx.Data, f, ctx.Locale)
 }
 
