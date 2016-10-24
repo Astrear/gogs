@@ -109,7 +109,6 @@ func SendActivateEmailMail(c *macaron.Context, u *User, email *EmailAddress) {
 	mailer.SendAsync(msg)
 }
 
-<<<<<<< HEAD
 // SendNotifyAccountMail triggers a notify e-mail when a professor creates an account.
 func SendNotifyAccountMail(c *macaron.Context, u *User) {
 	data := map[string]interface{}{
@@ -157,8 +156,6 @@ func SendDeniedAccountMail(c *macaron.Context, u *User) {
 	mailer.SendAsync(msg)
 }
 
-=======
->>>>>>> 6bcff7828f117af8d51285ce3acba01a7e40a867
 // SendRegisterNotifyMail triggers a notify e-mail by admin created a account.
 func SendRegisterNotifyMail(c *macaron.Context, u *User) {
 	data := map[string]interface{}{
@@ -179,11 +176,7 @@ func SendRegisterNotifyMail(c *macaron.Context, u *User) {
 // SendCollaboratorMail sends mail notification to new collaborator.
 func SendCollaboratorMail(u, doer *User, repo *Repository) {
 	repoName := path.Join(repo.Owner.Name, repo.Name)
-<<<<<<< HEAD
 	subject := fmt.Sprintf("GitWolf: %s te añadio como colaboorador a %s", doer.DisplayName(), repoName)
-=======
-	subject := fmt.Sprintf("%s added you to %s", doer.DisplayName(), repoName)
->>>>>>> 6bcff7828f117af8d51285ce3acba01a7e40a867
 
 	data := map[string]interface{}{
 		"Subject":  subject,
@@ -202,7 +195,6 @@ func SendCollaboratorMail(u, doer *User, repo *Repository) {
 	mailer.SendAsync(msg)
 }
 
-<<<<<<< HEAD
 func SendRegisterInvitationCollab(email string, doer *User, repo *Repository) {
 	repoName := path.Join(repo.Owner.Name, repo.Name)
 	subject := fmt.Sprintf("GitWolf: %s te añadio como colaboorador a %s", doer.DisplayName(), repoName)
@@ -224,8 +216,6 @@ func SendRegisterInvitationCollab(email string, doer *User, repo *Repository) {
 	mailer.SendAsync(msg)
 }
 
-=======
->>>>>>> 6bcff7828f117af8d51285ce3acba01a7e40a867
 func composeTplData(subject, body, link string) map[string]interface{} {
 	data := make(map[string]interface{}, 10)
 	data["Subject"] = subject

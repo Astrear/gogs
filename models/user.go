@@ -416,7 +416,11 @@ func (u *User) IsPublicMember(orgId int64) bool {
 }
 
 func (u *User) getSubjectCount(e Engine) (int64, error) {
-	return e.Where("uid=?", u.ID).GroupBy("subj_id").Count(new(Course))
+	subjects, err:= e.Where("uid=?", u.ID).GroupBy("subj_id").Count(new(Course))
+	if err != nil{
+		return 0 , nil
+	}
+	return subjects, err
 }
 
 // GetOrganizationCount returns count of membership of organization of user.
