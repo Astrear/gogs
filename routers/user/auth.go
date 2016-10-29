@@ -191,6 +191,12 @@ func SignUpPost(ctx *context.Context, cpt *captcha.Captcha, form auth.RegisterFo
 		return
 	}
 
+	if user, _ := models.GetUserByEmail(form.Email); user != nil {
+		ctx.Data["Err_Email"] = true
+		ctx.RenderWithErr(ctx.Tr("form.email_been_used"), SIGNUP, &form)
+		return
+	}
+
 	user_type := models.USER_TYPE_INDIVIDUAL
 	if form.Type {
 		user_type = models.USER_TYPE_PROFESSOR
