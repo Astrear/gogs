@@ -94,6 +94,12 @@ func NewUserPost(ctx *context.Context, form auth.AdminCrateUserForm) {
 		}
 	}
 
+	if user, _ := models.GetUserByEmail(form.Email); user != nil {
+		ctx.Data["Err_Email"] = true
+		ctx.RenderWithErr(ctx.Tr("form.email_been_used"), USER_NEW, &form)
+		return
+	}
+
 	if err := models.CreateUser(u); err != nil {
 		switch {
 		case models.IsErrUserAlreadyExist(err):
