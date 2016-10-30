@@ -23,6 +23,17 @@ func SearchByProfessor(ctx *context.APIContext) {
 		return
 	}
 
+	if len(groups) == 0 {
+		groups, err = models.GetGroups()
+		if err != nil {
+			ctx.JSON(500, map[string]interface{}{
+				"ok":    false,
+				"error": err.Error(),
+			})
+			return
+		}
+	}
+
 	results := make([]*api.Group, len(groups))
 	for i := range groups {
 		results[i] = &api.Group{

@@ -93,6 +93,17 @@ func SearchByProfessor(ctx *context.APIContext) {
 		return
 	}
 
+	if len(subjects) == 0 {
+		subjects, err = models.GetSubjects()
+		if err != nil {
+			ctx.JSON(500, map[string]interface{}{
+				"ok":    false,
+				"error": err.Error(),
+			})
+			return
+		}
+	}
+
 	results := make([]*api.Subject, len(subjects))
 	for i := range subjects {
 		results[i] = &api.Subject{
