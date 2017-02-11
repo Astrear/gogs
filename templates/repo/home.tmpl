@@ -13,14 +13,6 @@
 			</a>
 			{{end}}
 
-			{{if .Repository.SubjectID}}
-			<a class="ui image label" href="/explore/repos?q={{.Repository.GetSubjectName}}">
-			  <i class="book icon"></i>
-			  Materia
-			  <div class="detail">{{.Repository.GetSubjectName}}</div>
-			</a>
-			{{end}}
-
 			{{if .Repository.SemesterID}}
 			<a class="ui image label" href="/explore/repos?q={{.Repository.GetSemesterName}}">
 			  <i class="calendar icon"></i>
@@ -36,6 +28,16 @@
 			  <div class="detail">{{.Repository.GetGroupName}}</div>
 			</a>
 			{{end}}
+
+			{{if .Repository.SubjectID}}
+			<a class="ui image label" href="/explore/repos?q={{.Repository.GetSubjectName}}">
+			  <i class="book icon"></i>
+			  Materia
+			  <div class="detail">{{.Repository.GetSubjectName}}</div>
+			</a>
+			{{end}}
+
+			
 		</div>
 
 		<div class="ui mini icon message">

@@ -153,6 +153,7 @@ func CreatePost(ctx *context.Context, form auth.CreateRepoForm) {
 	ctx.Data["Gitignores"] = models.Gitignores
 	ctx.Data["Licenses"] = models.Licenses
 	ctx.Data["Readmes"] = models.Readmes
+	PrepareInfoCreateRepo(ctx)
 
 	ctxUser := checkContextUser(ctx, form.Uid)
 	if ctx.Written() {

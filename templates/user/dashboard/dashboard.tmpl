@@ -86,11 +86,14 @@
 				{{end}}
 
 				<div class="row">
-					<div class="ui {{if not .ContextUser.IsOrganization}}three{{else}}two{{end}} item tabable menu">
+					<!-- <div class="ui {{if not .ContextUser.IsOrganization}}three{{else}}two{{end}} item tabable menu"> -->
+					<div class="ui two item tabable menu">
 						<a class="item active" data-tab="repos">{{.i18n.Tr "repository"}}</a>
+						<!--
 						{{if not .ContextUser.IsOrganization}}
 							<a class="item" data-tab="orgs">{{.i18n.Tr "organization"}}</a>
 						{{end}}
+						-->
 						<a class="item" data-tab="mirrors">{{.i18n.Tr "mirror"}}</a>
 					</div>
 					<div class="ui tab active list" data-tab="repos">
@@ -147,7 +150,8 @@
 							</div>
 						{{end}}
 					</div>
-
+					
+					<!--
 					{{if not .ContextUser.IsOrganization}}
 						<div class="ui tab list" data-tab="orgs">
 							<h4 class="ui top attached header">
@@ -176,6 +180,7 @@
 							</div>
 						</div>
 					{{end}}
+					-->
 
 					<div class="ui tab list" data-tab="mirrors">
 						<h4 class="ui top attached header">
