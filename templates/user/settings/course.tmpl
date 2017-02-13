@@ -11,9 +11,31 @@
 						<a class="ui black tiny button" href="{{AppSubUrl}}/user/settings/course/new">{{.i18n.Tr "user.settings.course.add_course"}}</a>
 					</div>
 				</h4>
-				<div class="ui attached segment collaborator list">
+				
+				<div class="ui top attached tabular menu">
+					{{range $i, $s := .Semesters}}
+						{{if eq $i 0}}
+							<a class="semestre active item" data-tab="{{.Name}}">{{.Name}}</a>
+						{{else}}
+							<a class="semestre item" data-tab="{{.Name}}">{{.Name}}</a>
+						{{end}}
+				  	{{end}}
+				</div>
+				{{range $i, $s := .Semesters}}
+						{{if eq $i 0}}
+							<div class="ui bottom attached active tab segment tabCurso" data-tab="{{.Name}}" id="tabCurso_{{.Name}}">
+  								
+							</div>
+						{{else}}
+							<div class="ui bottom attached tab segment tabCurso" data-tab="{{.Name}}" id="tabCurso_{{.Name}}">
+  								
+							</div>
+						{{end}}
+				  	{{end}}
+
+				<div class="ui attached segment collaborator list" style="display: none;">
 					{{range .Courses}}
-						<div class="item ui grid">
+						<div class="itemCurso item ui grid" data-tab="{{.Semester.Name}}">
 							<div class="ui six wide column">
 								<span class="octicon octicon-calendar"></span>
 								{{.Semester.Name}}
@@ -43,6 +65,19 @@
 						</div>
 					{{end}}
 				</div>
+				<script>
+					$( document ).ready(function() {	
+    					$( ".semestre" ).each(function( index, this1 ) {
+  							var sem = $(this1).attr("data-tab");
+  							$( ".itemCurso" ).each(function( index2, this2 ) {
+  								var sem2 = $(this2).attr("data-tab");
+  								if(sem2 == sem){
+  									$(this2).appendTo("#tabCurso_" + sem2);
+  								}
+  							});
+						});
+					});
+				</script>
 			</div>
 		</div>
 	</div>

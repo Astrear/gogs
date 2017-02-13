@@ -294,11 +294,19 @@ func SettingsCourses(ctx *context.Context) {
 	ctx.Data["Title"] = ctx.Tr("settings")
 	ctx.Data["PageIsSettingsSubjects"] = true
 
+	semesters, err := models.GetSemestersProfessor(ctx.User.ID)
+	if err != nil {
+		ctx.Handle(500, "GetSemestersProfessor", err)
+		return
+	}
+
 	courses, err := ctx.User.GetCoursesInfo()
 	if err != nil {
 		ctx.Handle(500, "GetCoursesInfo", err)
 		return
 	}
+
+	ctx.Data["Semesters"] = semesters
 	ctx.Data["Courses"] = courses
 
 	ctx.HTML(200, SETTINGS_COURSES)

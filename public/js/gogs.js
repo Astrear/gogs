@@ -1260,6 +1260,48 @@ function getSubjectsFromProfessor(){
     });
 }
 
+function getCoursesBySemester(){
+
+    $(".singlecourse").click(function (event){
+        event.preventDefault();
+        var $this = $(this);
+        var $professor = $("#courses").data("professor");
+        var $professorName = $("#courses").data("name");
+        var $semester  = $this.data('semester')
+        var $list = $("#list")
+        var $container = $("<div class='ui divided selection list'></div>");
+
+        //console.log("prof  " +$professor,"sem  " + $semester)
+
+        //GET SUBJECTS
+        $.ajax({
+            url: suburl + '/api/v1/courses/searchBySemester?prof=' + $professor + '&sem=' + $semester,
+            dataType: "json",
+            success: function (response) {
+                var notEmpty = function (str) {
+                    return str && str.length > 0;
+                };
+
+                courses = JSON.parse(JSON.stringify(response)).data;
+
+                $list.empty()
+
+                $.each(courses, function(index, element) {
+                    var $link = $("<a class='item' href='/explore/advanced/?q=&professor="+ $professorName +"&subject="+ element.Subjects.Name +"&group="+ element.Groups.Name +"&semester="+ element.Semesters.Name +"'></a>");
+                    $link.append("<div class='ui horizontal label'>" + element.Groups.Name + "</div>" + element.Subjects.Name);
+                    $container.append($link);
+                });
+
+                $list.append($container)
+                $("#courses").accordion("open", 1)
+            }
+        });
+        
+    });
+}
+
+
+
 function searchSubjects() {
     if (!$('#search-subject-box .results').length) {
         return;
@@ -1641,6 +1683,8 @@ $(document).ready(function () {
     getSubjects();
     registrarMateria();
     registrarTag();
+
+    getCoursesBySemester();
 
     initCommentForm();
     initInstall();

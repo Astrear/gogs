@@ -10,6 +10,24 @@
 				{{if .SignedUser.IsProfessor}}
 				{{$Prof := .SignedUser.FullName}}
 				<div class="row">
+					<div class="ui styled accordion" id="courses" data-professor="{{ .SignedUserID }}" data-name="{{ .SignedUserFullName }}">
+						<div class="active title">
+							<i class="dropdown icon"></i>
+							{{.i18n.Tr "courses"}}
+						</div>
+						<div class="active content">
+							{{ range .Semesters }}
+								<p><a href="#" class="singlecourse" data-semester="{{ .ID }}">{{ .Name }}</a></p>
+							{{ end }}
+						</div>
+						<div class="title">
+							<i class="dropdown icon"></i>
+							{{.i18n.Tr "details"}}
+						</div>
+						<div class="content" id="list">
+							
+						</div>
+					</div>
 					<div class="ui three item tabable menu">
 						<a class="item active" data-tab="subjects">{{.i18n.Tr "subject"}}</a>
 						<a class="item" data-tab="groups">{{.i18n.Tr "group"}}</a>

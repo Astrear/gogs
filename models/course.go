@@ -67,6 +67,20 @@ func (u *User) getCourses(e Engine) ([]*Course, error) {
 	return courses, e.Find(&courses, &Course{Uid: u.ID})
 }
 
+func (u *User) GetSemestersCourses(e Engine) ([]*Semester, error){
+	courses := make([]*Course, 0)
+	semesters := make([]*Semester, 0)
+	e.Find(&courses, &Course{Uid: u.ID})
+
+	return semesters, nil
+}
+
+func  getCoursesBySemester(e Engine, profID int64, semID int64) ([]*Course, error) {
+	courses := make([]*Course, 0)
+	//fmt.Printf("IDProfessor: %d, IDSemester: %d", profID, semID)
+	return courses, e.Find(&courses, &Course{Uid: profID, SemesterID: semID})
+}
+
 type CourseInfo struct {
 	*Subject
 	*Group
@@ -109,6 +123,61 @@ func (u *User) getCoursesInfo(e Engine) ([]*CourseInfo, error) {
 		}
 	}
 	return info, nil
+}
+
+func  GetCoursesInfoBySemester(profID int64, semID int64) ([]*CourseInfo, error) {
+	return getCoursesInfoBySemester(x, profID, semID)
+}
+
+func  getCoursesInfoBySemester(e Engine, profID int64, semID int64) ([]*CourseInfo, error) {
+	courses, err := getCoursesBySemester(e, profID, semID)
+	if err != nil {
+		return nil, fmt.Errorf("getCourses: %v", err)
+	}
+
+	info := make([]*CourseInfo, len(courses))
+	for i, c := range courses {
+		subject, err := GetSubjectByID(c.SubjID)
+		if err != nil {
+			return nil, err
+		}
+
+		semester, err := GetSemesterByID(c.SemesterID)
+		if err != nil {
+			return nil, err
+		}
+
+		group, err := GetGroupByID(c.GroupID)
+		if err != nil {
+			return nil, err
+		}
+
+		info[i] = &CourseInfo{
+			Subject:  subject,
+			Group:    group,
+			Semester: semester,
+			Course:   c,
+		}
+	}
+	return info, nil
+}
+
+func getArrayCoursesbySemester(e Engine, profID int64) ([][]*CourseInfo, error){
+	info := make([][]*CourseInfo, 0)
+	semesters, err := GetSemestersProfessor(profID)
+
+	for i,sem := range semesters{
+		ar:= make([]*CourseInfo , 0)
+		ar,err = GetCoursesInfoBySemester(profID, sem.ID)
+
+		info[i] = ar
+	}
+
+	return info, err
+}
+
+func  GetArrayCoursesbySemester(profID int64) ([][]*CourseInfo, error) {
+	return getArrayCoursesbySemester(x, profID)
 }
 
 // ChangeCourseStatus changes active or inactive status.
