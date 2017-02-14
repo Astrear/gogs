@@ -191,6 +191,8 @@ func CreatePost(ctx *context.Context, form auth.CreateRepoForm) {
 		if form.Professor != 0 {
 			//Agregar profesor como colaborador a repositorio con permisos de lectura
 			models.AddCollaboratorProfessor(form.Professor, repo.ID)
+			models.WatchRepo(form.Professor, repo.ID, true)
+			models.StarRepo(form.Professor, repo.ID, true)
 		}
 
 		log.Trace("Repository created [%d]: %s/%s", repo.ID, ctxUser.Name, repo.Name)

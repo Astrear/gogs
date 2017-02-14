@@ -1620,7 +1620,7 @@ func SearchRepositoryByName(opts *SearchRepoOptions) (repos []*Repository, _ int
 	repos = make([]*Repository, 0, opts.PageSize)
 
 	// Append conditions
-	sess := x.Cols("repository.name, repository.owner_id, repository.description, repository.is_mirror, repository.is_private, repository.updated_unix, repository.num_stars").
+	sess := x.Cols("repository.name, repository.owner_id, repository.description, repository.is_mirror, repository.is_private, repository.updated_unix, repository.num_stars,repository.semester_id,repository.group_id,repository.subject_id").
 		Join("INNER", "semester", "repository.semester_id = semester.id").
 		Join("INNER", "user", "repository.professor_id = user.id").
 		Join("INNER", "subject", "repository.subject_id = subject.id").

@@ -12,6 +12,12 @@
 				<div class="row">
 					<div class="ui styled accordion" id="courses" data-professor="{{ .SignedUserID }}" data-name="{{ .SignedUserFullName }}">
 						<div class="active title">
+							<div class="ui right">
+								<a class="poping up" href="{{AppSubUrl}}/user/settings/course/new" data-content="{{.i18n.Tr "new_course"}}" data-variation="tiny inverted" data-position="left center">
+									<i class="plus icon"></i>
+									<span class="sr-only">{{.i18n.Tr "new_course"}}</span>
+								</a>
+							</div>
 							<i class="dropdown icon"></i>
 							{{.i18n.Tr "courses"}}
 						</div>
@@ -26,75 +32,6 @@
 						</div>
 						<div class="content" id="list">
 							
-						</div>
-					</div>
-					<div class="ui three item tabable menu">
-						<a class="item active" data-tab="subjects">{{.i18n.Tr "subject"}}</a>
-						<a class="item" data-tab="groups">{{.i18n.Tr "group"}}</a>
-						<a class="item" data-tab="semesters">{{.i18n.Tr "semester"}}</a>
-					</div>
-					<div class="ui tab active list" data-tab="subjects">
-						<h4 class="ui top attached header">
-							{{.i18n.Tr "home.my_subjects"}} <span class="ui grey label">{{len .Subjects}}</span>
-							<div class="ui right">
-								<a class="poping up" href="{{AppSubUrl}}/user/settings/course" data-content="{{.i18n.Tr "new_subject"}}" data-variation="tiny inverted" data-position="left center">
-									<i class="plus icon"></i>
-									<span class="sr-only">{{.i18n.Tr "new_subject"}}</span>
-								</a>
-							</div>
-						</h4>
-						<div class="ui attached table segment">
-							<ul class="repo-owner-name-list">
-								{{range .Subjects}} 
-									<li>
-										<a href="{{AppSubUrl}}/explore/advanced/?q=&professor={{$Prof}}&subject={{.Name}}&group=&semester=">
-											<i class="octicon octicon-briefcase"></i>
-											<strong class="text truncate item-name">{{.Name}}</strong>
-										</a>
-									</li>
-								{{end}}
-								{{if gt .ContextUser.GetSubjectCount .MaxShowRepoNum}}
-								<li>
-									<a href="{{.ContextUser.HomeLink}}">{{.i18n.Tr "home.show_more_repos"}}</a>
-								</li>
-								{{end}}
-							</ul>
-						</div>
-					</div>
-
-					<div class="ui tab list" data-tab="groups">
-						<h4 class="ui top attached header">
-							{{.i18n.Tr "home.my_groups"}} <span class="ui grey label">{{len .Groups}}</span>
-						</h4>
-						<div class="ui attached table segment">
-							<ul class="repo-owner-name-list">
-								{{range .Groups}}
-									<li>
-										<a href="{{AppSubUrl}}/explore/advanced/?q=&professor={{$Prof}}&subject=&group={{.Name}}&semester=">
-											<i class="octicon octicon-organization"></i>
-											<strong class="text truncate item-name">{{.Name}}</strong>
-										</a>
-									</li>
-								{{end}}
-							</ul>
-						</div>
-					</div>
-
-					<div class="ui tab list" data-tab="semesters">
-						<h4 class="ui top attached header">
-							{{.i18n.Tr "home.my_semesters"}} <span class="ui grey label">{{len .Semesters}}</span>
-						</h4>
-						<div class="ui attached table segment">
-							<ul class="repo-owner-name-list">
-								{{range .Semesters}}
-									<li>
-										<a href="{{AppSubUrl}}/explore/advanced/?q=&professor={{$Prof}}&subject=&group=&semester={{.Name}}">
-											<i class="octicon octicon-calendar"></i>
-											<strong class="text truncate item-name">{{.Name}}</strong>
-										</a>
-									</li>
-								{{end}}
-							</ul>
 						</div>
 					</div>
 				</div>
