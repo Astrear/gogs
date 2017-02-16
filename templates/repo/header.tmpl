@@ -39,6 +39,19 @@
 								{{.NumStars}}
 							</a>
 						</div>
+						<!-- Boton dejar de colaborar-->
+						{{if $.IsSigned}}
+							{{if not $.IsOwnerOfRepo}}
+								{{if $.IsCollabOfRepo}}
+									<div class="ui labeled button" tabindex="0">
+										<a class="ui button" href="{{$.RepoLink}}/leave?cUser={{$.SignedUser.ID}}">
+											<i class="octicon octicon-sign-out"></i> {{$.i18n.Tr "repo.dejarcolab"}}
+										</a>
+									</div>
+								{{end}}
+							{{end}}
+						{{end}}
+						<!-- Fin Boton dejar de colaborar-->
 					</div>
 				</div>
 			</div><!-- end column -->

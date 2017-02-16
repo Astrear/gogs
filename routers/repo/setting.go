@@ -575,6 +575,19 @@ func DeleteCollaboration(ctx *context.Context) {
 	})
 }
 
+func LeaveRepo(ctx *context.Context){
+	repo := ctx.Repo.Repository
+	if ctx.QueryInt64("cUser") == ctx.User.ID {
+		if err := repo.DeleteCollaboration(ctx.QueryInt64("cUser")); err != nil {
+			ctx.Flash.Error("DeleteCollaboration: " + err.Error())
+		} else {
+			ctx.Redirect(repo.Link())
+		}
+	} else {
+		ctx.Redirect(repo.Link())
+	}
+}
+
 func parseOwnerAndRepo(ctx *context.Context) (*models.User, *models.Repository) {
 	owner, err := models.GetUserByName(ctx.Params(":username"))
 	if err != nil {

@@ -262,6 +262,8 @@ func RepoAssignment(args ...bool) macaron.Handler {
 		if ctx.IsSigned {
 			ctx.Data["IsWatchingRepo"] = models.IsWatching(ctx.User.ID, repo.ID)
 			ctx.Data["IsStaringRepo"] = models.IsStaring(ctx.User.ID, repo.ID)
+			ctx.Data["IsOwnerOfRepo"] = models.IsOwnerofRepo(ctx.User.ID, repo.ID)
+			ctx.Data["IsCollabOfRepo"] = models.IsCollaboratorOfRepo(ctx.User.ID, repo.ID)
 		}
 
 		// repo is bare and display enable

@@ -479,6 +479,15 @@ func runWeb(ctx *cli.Context) error {
 	}, reqSignIn)
 
 	m.Group("/:username/:reponame", func() {
+		m.Group("/leave", func() {
+			m.Combo("").Get(repo.LeaveRepo)
+			})
+		}, reqSignIn, context.RepoAssignment(), context.RepoRef())
+
+	m.Group("/:username/:reponame", func() {
+		m.Group("/leave", func() {
+			m.Combo("").Get(repo.LeaveRepo)
+			})
 		m.Group("/settings", func() {
 			m.Combo("").Get(repo.Settings).
 				Post(bindIgnErr(auth.RepoSettingForm{}), repo.SettingsPost)

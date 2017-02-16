@@ -434,6 +434,25 @@ func (repo *Repository) IsOwnedBy(userID int64) bool {
 	return repo.OwnerID == userID
 }
 
+func IsOwnerofRepo(userID int64, repoID int64)bool{
+	repo, _ := getRepositoryByID(x, repoID);
+
+	return repo.IsOwnedBy(userID)
+}
+
+func IsCollaboratorOfRepo(userID int64, repoID int64) bool{
+	repo, _ := getRepositoryByID(x, repoID);
+	collaborators, _ := repo.getCollaborators(x)
+
+	for _, c := range collaborators {
+		if c.User.ID == userID{
+			return true;
+		}
+	}
+
+	return false
+}
+
 // CanBeForked returns true if repository meets the requirements of being forked.
 func (repo *Repository) CanBeForked() bool {
 	return !repo.IsBare

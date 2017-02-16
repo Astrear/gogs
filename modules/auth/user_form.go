@@ -95,6 +95,7 @@ type UpdateProfileForm struct {
 	Name     string `binding:"OmitEmpty;MaxSize(35)"`
 	FullName string `binding:"MaxSize(100)"`
 	Email    string `binding:"Required;Email;MaxSize(254)"`
+	Boleta   string `binding:"Required;MaxSize(10)"`
 	Website  string `binding:"Url;MaxSize(100)"`
 	Location string `binding:"MaxSize(50)"`
 }

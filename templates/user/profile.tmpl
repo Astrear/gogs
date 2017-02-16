@@ -28,6 +28,12 @@
 									<a href="mailto:{{.Owner.Email}}" rel="nofollow">{{.Owner.Email}}</a>
 								</li>
 							{{end}}
+							{{if not .Owner.IsProfessor }}
+								<li>
+									<i class="octicon octicon-mortar-board"></i>
+									<span>{{.Owner.Boleta}}</span>
+								</li>
+							{{end}}
 							{{if .Owner.Website}}
 								<li>
 									<i class="octicon octicon-link"></i>
