@@ -1,3 +1,9 @@
+<style>
+	.ui.repository.list .item:not(:first-child) {
+		border: 0;
+		padding-top: 0;
+	}
+</style>
 <div class="ui repository list">
 	{{range .Repos}}
 		<div class="item">
@@ -39,6 +45,19 @@
 			  Materia
 			  <div class="detail">{{.GetSubjectName}}</div>
 			</a>
+			{{end}}
+			<br>
+			{{if .GetTags}}
+				<div class="ui horizontal list" style="padding-bottom: 20px;">
+				{{range .GetTags}}
+					<div class="item" style="padding-bottom: 0;">
+						<a class="ui tiny label" href="/explore/repos?q={{.Etiqueta}}">
+						  <i class="tag icon"></i>
+						  {{.Etiqueta}}
+						</a>
+					</div>
+				{{end}}
+				</div>
 			{{end}}
 			<p class="time">{{$.i18n.Tr "org.repo_updated"}} {{TimeSince .Updated $.i18n.Lang}}</p>
 		</div>

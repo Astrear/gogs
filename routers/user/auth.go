@@ -191,13 +191,6 @@ func SignUpPost(ctx *context.Context, cpt *captcha.Captcha, form auth.RegisterFo
 		return
 	}
 
-
-	if len(form.Boleta) != 10 {
-		ctx.Data["Err_Boleta"] = true
-		ctx.RenderWithErr(ctx.Tr("form.size_of_boleta"), SIGNUP, &form)
-		return
-	}
-
 	if user, _ := models.GetUserByEmail(form.Email); user != nil {
 		ctx.Data["Err_Email"] = true
 		ctx.RenderWithErr(ctx.Tr("form.email_been_used"), SIGNUP, &form)
@@ -218,7 +211,6 @@ func SignUpPost(ctx *context.Context, cpt *captcha.Captcha, form auth.RegisterFo
 		IsActive: !setting.Service.RegisterEmailConfirm,
 		ProhibitLogin: form.Type,
 		Type: 	user_type,
-		Boleta: form.Boleta,
 	}
 	if err := models.CreateUser(u); err != nil {
 		switch {

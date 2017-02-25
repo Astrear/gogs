@@ -98,3 +98,39 @@
   Numero de repositorios encontrados: {{.Total}}
 </div>
 <div class="ui divider"></div>
+
+<script>
+	function getParameterByName(name, url) {
+	    if (!url) {
+	      url = window.location.href;
+	    }
+	    name = name.replace(/[\[\]]/g, "\\$&");
+	    var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
+	        results = regex.exec(url);
+	    if (!results) return null;
+	    if (!results[2]) return '';
+	    return decodeURIComponent(results[2].replace(/\+/g, " "));
+	}
+
+	$(document).ready(function($) {
+		var url = window.location.href;
+		if(url.includes('?')){
+			var query = getParameterByName("q", url);
+			if( query != ""){
+				$('imput[name="query"]').text(query)
+			} else {
+
+			}
+
+			$('.dropdown.button').each(function(index, el) {
+				var key = $(this).find('input').attr('name');
+				var value = getParameterByName(key, url);
+				if( value != ""){
+					$(this).dropdown('set selected', value)
+				} else {
+
+				}
+			});
+		}
+	});
+</script>

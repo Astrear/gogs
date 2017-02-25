@@ -203,7 +203,7 @@ func runWeb(ctx *cli.Context) error {
 	reqSignOut := context.Toggle(&context.ToggleOptions{SignOutRequired: true})
 
 	bindIgnErr := binding.BindIgnErr
-
+	profReq := context.Toggle(&context.ToggleOptions{SignInRequired: true, ProfessorRequired: true})
 	// FIXME: not all routes need go through same middlewares.
 	// Especially some AJAX requests, we can reduce middleware number to improve performance.
 	// Routers.
@@ -248,8 +248,8 @@ func runWeb(ctx *cli.Context) error {
 		m.Post("/email/delete", user.DeleteEmail)
 
 		m.Group("/course", func() {
-			m.Combo("").Get(user.SettingsCourses).Post(bindIgnErr(auth.AdminCrateSubjectForm{}), user.CoursePost)
-			m.Get("/new", user.NewCourse)
+			m.Combo("").Get(profReq, user.SettingsCourses).Post(bindIgnErr(auth.AdminCrateSubjectForm{}), user.CoursePost)
+			m.Get("/new", profReq, user.NewCourse)
 			m.Post("/new", bindIgnErr(auth.CreateNewCourseForm{}), user.NewCoursePost)
 			m.Post("/status", user.ChangeCourseStatus)
 			m.Post("/delete", user.DeleteCourse)

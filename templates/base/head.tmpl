@@ -64,7 +64,11 @@
 
 								{{if .IsSigned}}
 									<a class="item{{if .PageIsDashboard}} active{{end}}" href="{{AppSubUrl}}/">{{.i18n.Tr "dashboard"}}</a>
-									<a class="item{{if .PageIsIssues}} active{{end}}" href="{{AppSubUrl}}/issues">{{.i18n.Tr "issues"}}</a>
+									{{if not .SignedUser.IsProfessor}}
+										<a class="item{{if .PageIsIssues}} active{{end}}" href="{{AppSubUrl}}/issues">{{.i18n.Tr "issues"}}</a>
+									{{else}}
+										<a class="item{{if .PageIsIssues}} active{{end}}" href="{{AppSubUrl}}/user/settings/course">{{.i18n.Tr "courses"}}</a>
+									{{end}}
 								{{else}}
 									<a class="item{{if .PageIsHome}} active{{end}}" href="{{AppSubUrl}}/">{{.i18n.Tr "home"}}</a>
 								{{end}}
@@ -79,6 +83,28 @@
 
 								{{if .IsSigned}}
 									<div class="right menu">
+										{{if .SignedUser.IsProfessor}}
+											<div class="ui dropdown head link jump item poping up" data-content="{{.i18n.Tr "courses"}}" data-variation="tiny inverted">
+												<span class="text">
+													<i class="octicon octicon-briefcase"><span class="sr-only">{{.i18n.Tr "courses"}}</span></i>
+													<i class="octicon octicon-triangle-down"></i>
+												</span>
+												<div class="menu">
+													<a class="item" href="{{AppSubUrl}}/user/settings/course/new">
+														<i class="octicon octicon-plus"></i> {{.i18n.Tr "new_course"}}
+													</a>
+													<a class="item" href="{{AppSubUrl}}/user/settings/course">
+														<i class="octicon octicon-gear"></i> {{.i18n.Tr "conf_course"}}
+													</a>
+													<!--
+													<a class="item" href="{{AppSubUrl}}/org/create">
+														<i class="octicon octicon-organization"></i> {{.i18n.Tr "new_org"}}
+													</a>
+													-->
+												</div><!-- end content create new menu -->
+											</div><!-- end dropdown menu create new -->
+										{{end}}
+
 										<div class="ui dropdown head link jump item poping up" data-content="{{.i18n.Tr "create_new"}}" data-variation="tiny inverted">
 											<span class="text">
 												<i class="octicon octicon-plus"><span class="sr-only">{{.i18n.Tr "create_new"}}</span></i>

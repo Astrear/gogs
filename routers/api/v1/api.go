@@ -186,6 +186,10 @@ func RegisterRoutes(m *macaron.Macaron) {
 			m.Get("/create", repo.CreateTag)
 		})
 
+		m.Group("/evaluate", func() {
+			m.Get("/repo", repo.EvaluateRepo)
+		})
+
 		// Users
 		m.Group("/users", func() {
 			m.Get("/search", user.Search)

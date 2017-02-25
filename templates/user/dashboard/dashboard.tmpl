@@ -12,12 +12,6 @@
 				<div class="row">
 					<div class="ui styled accordion" id="courses" data-professor="{{ .SignedUserID }}" data-name="{{ .SignedUserFullName }}">
 						<div class="active title">
-							<div class="ui right">
-								<a class="poping up" href="{{AppSubUrl}}/user/settings/course/new" data-content="{{.i18n.Tr "new_course"}}" data-variation="tiny inverted" data-position="left center">
-									<i class="plus icon"></i>
-									<span class="sr-only">{{.i18n.Tr "new_course"}}</span>
-								</a>
-							</div>
 							<i class="dropdown icon"></i>
 							{{.i18n.Tr "courses"}}
 						</div>

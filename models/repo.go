@@ -1639,7 +1639,7 @@ func SearchRepositoryByName(opts *SearchRepoOptions) (repos []*Repository, _ int
 	repos = make([]*Repository, 0, opts.PageSize)
 
 	// Append conditions
-	sess := x.Cols("repository.name, repository.owner_id, repository.description, repository.is_mirror, repository.is_private, repository.updated_unix, repository.num_stars,repository.semester_id,repository.group_id,repository.subject_id").
+	sess := x.Cols("repository.id","repository.name, repository.owner_id, repository.description, repository.is_mirror, repository.is_private, repository.updated_unix, repository.num_stars,repository.semester_id,repository.group_id,repository.subject_id").
 		Join("INNER", "semester", "repository.semester_id = semester.id").
 		Join("INNER", "user", "repository.professor_id = user.id").
 		Join("INNER", "subject", "repository.subject_id = subject.id").
@@ -2401,4 +2401,106 @@ func (repo *Repository) TagsHtml() template.HTML {
 	}
 
 	return template.HTML(DescPattern.ReplaceAllStringFunc(markdown.Sanitizer.Sanitize(tagsHTML), sanitize))
+}
+
+/////////////////////////
+//******CALIFICACION_REPO******
+/////////////////////////
+/////////////////////////
+type CalificacionRepo struct {
+	ID      		int64 `xorm:"pk autoincr"`
+	UserID  		int64 `xorm:"UNIQUE(s)"`
+	RepoID  		int64 `xorm:"UNIQUE(s)"`
+	Calificacion    int   `xorm:"NOT NULL DEFAULT 0"`
+}
+
+// IsStaring checks if user has starred given repository.
+func IsUserStarRepo(userID, repoID int64) bool {
+	has, _ := x.Get(&CalificacionRepo{0, userID, repoID, 0})
+	return has
+}
+
+// Star or unstar repository.
+func StarRepository(userID, repoID int64, calificacion int, starred bool) (err error) {
+	if starred {
+		if IsUserStarRepo(userID, repoID) {
+			return nil
+		}
+		if _, err = x.Insert(&CalificacionRepo{UserID: userID, RepoID: repoID, Calificacion: calificacion}); err != nil {
+			return err
+		}
+	} else {
+		if !IsUserStarRepo(userID, repoID) {
+			return nil
+		}
+		if _, err = x.Delete(&CalificacionRepo{0, userID, repoID,0}); err != nil {
+			return err
+		}
+	}
+	return err
+}
+
+func GetAverageRatingRepo(repoID int64) (average string) {
+	results, err := x.Query("SELECT ROUND( AVG(calificacion),1 )  AS average FROM calificacion_repo WHERE repo_id=?", repoID)
+	if err != nil {
+		log.Error(4, "Select %s: %v", "ROUND( AVG(calificacion),1 ) AS average FROM calificacion_repo WHERE repo_id", err)
+		return "ERROR"
+	} else {
+		for _, result := range results {
+			average = string(result["average"])
+		}
+
+		if average == "" {
+			average = "0";
+		}
+
+		return average
+	}
+}
+
+func (r *Repository) GetAverageRateRepo() (average string) {
+	return GetAverageRatingRepo(r.ID)
+}
+
+func GetNumberAverageRatingRepo(repoID int64) (number string) {
+	results, err := x.Query("SELECT COUNT(*) as number FROM calificacion_repo WHERE repo_id=?", repoID)
+	if err != nil {
+		log.Error(4, "Select %s: %v", "COUNT(*) as number FROM calificacion_repo WHERE repo_id", err)
+		return "ERROR"
+	} else {
+		for _, result := range results {
+			number = string(result["number"])
+		}
+
+		return number
+	}
+}
+
+func (r *Repository) GetNumberAverageRateRepo() (number string) {
+	return GetNumberAverageRatingRepo(r.ID)
+}
+
+func DeleteGradeRepoUser(repoID , userID int64) bool {
+	if _, err := x.Delete(&CalificacionRepo{0, userID, repoID,0}); err != nil {
+		return false
+	}
+
+	return true
+}
+
+func getUserRate(userID int64, repoID int64) (*CalificacionRepo, bool) {
+	rate := new(CalificacionRepo)
+	has, _ := x.Where("user_id = ?", userID).And("repo_id = ?", repoID).Get(rate)
+	return rate, has
+}
+
+func (r *Repository) GetUserRate(userID int64) (*CalificacionRepo, bool) {
+	return getUserRate(userID, r.ID)
+}
+
+
+func UpdateRateUser(userID, repoID int64, calificacion int)(error){
+	_, err := x.Exec("UPDATE `calificacion_repo` SET calificacion = ? WHERE user_id = ? AND repo_id = ?", calificacion, userID, repoID)
+
+	return err
 }

@@ -29,10 +29,12 @@
 								</li>
 							{{end}}
 							{{if not .Owner.IsProfessor }}
+								{{if .Owner.Boleta}}
 								<li>
 									<i class="octicon octicon-mortar-board"></i>
 									<span>{{.Owner.Boleta}}</span>
 								</li>
+								{{end}}
 							{{end}}
 							{{if .Owner.Website}}
 								<li>

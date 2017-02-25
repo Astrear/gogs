@@ -1456,6 +1456,63 @@ function registrarTag(){
     });
 }
 
+function registrarTag(){
+    var $form = $("#form-registrarTag");
+    $form.submit(function( event ) {
+        var tag = $("#tag_modal").val();
+        $.ajax({
+            url: suburl + '/api/v1/tags/create?t=' + tag,
+            dataType: "json",
+            success: function (response) {
+                var notEmpty = function (str) {
+                    return str && str.length > 0;
+                };
+
+                if (response.ok && response.data.length) {
+                    $.each(response.data, function (i, item) {
+                        $('.ui.modal').modal('hide');
+                        $("#divMensajeTagError").hide();
+                        $("#mensajeTag").html("Se ha registrado la tag: " + item.etiqueta)
+                        $("#divMensajeTag").show();
+                        $("#tag_modal").val("");
+                    });
+                }
+            },
+            error: function(response){
+                $("#divMensajeTagError").show();
+            }
+        });
+        event.preventDefault();
+    });
+}
+
+function evaluarRepo(){
+    $('.ui.star.rating').rating('setting', 'onRate', function(value) {
+        var userID = $(this).attr( "data-user-id" );
+        var repoID = $(this).attr( "data-repo-id" );
+        $.ajax({
+            url: suburl + '/api/v1/evaluate/repo?userID=' + userID + "&repoID=" + repoID + "&calificacion=" + value,
+            dataType: "json",
+            success: function (response) {
+                var notEmpty = function (str) {
+                    return str && str.length > 0;
+                };
+
+                if (response.ok && response.data.length) {
+                    $.each(response.data, function (i, item) {
+                        //$("#divMensajeCalificacion").show();
+                        location.reload();
+                    });
+                }
+            },
+            error: function(response){
+                //$("#divMensajeTagError").show();
+            }
+        });
+    });
+}
+
+
 function registrarMateria(){
     var $form = $("#form-registrarMateria");
     $form.submit(function( event ) {
@@ -1681,6 +1738,7 @@ $(document).ready(function () {
     searchTags();
     getSubjectsFromProfessor();
     getSubjects();
+    evaluarRepo();
     registrarMateria();
     registrarTag();
 

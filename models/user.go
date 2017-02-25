@@ -111,7 +111,7 @@ type User struct {
 	Subjects	[]*Subject  `xorm:"-"`
 
 	// for student
-	Boleta string `xorm:"NOT NULL"`
+	Boleta string `xorm:"NOT NULL`
 }
 
 func (u *User) BeforeInsert() {

@@ -6,6 +6,7 @@ package repo
 
 import (
 	"path"
+	"strconv"
 
 	api "github.com/gogits/go-gogs-client"
 
@@ -291,4 +292,39 @@ func Delete(ctx *context.APIContext) {
 
 	log.Trace("Repository deleted: %s/%s", owner.Name, repo.Name)
 	ctx.Status(204)
+}
+
+func EvaluateRepo(ctx *context.APIContext) {
+	calificacion,_ := strconv.Atoi(ctx.Query("calificacion"))
+	userID,_ := strconv.ParseInt(ctx.Query("userID"), 10, 64)
+	repoID,_ := strconv.ParseInt(ctx.Query("repoID"), 10, 64)
+
+	rt := &models.CalificacionRepo{
+		UserID: userID,
+		RepoID: repoID,
+		Calificacion: calificacion,
+	}
+
+	has:= models.IsUserStarRepo(userID,repoID)
+	if has{
+		models.UpdateRateUser(userID, repoID, calificacion)
+	}else{
+		if err := models.StarRepository(userID, repoID, calificacion, true); err != nil {
+			ctx.Error(500, "EvaluateRepo", err)
+			return
+		}
+	}
+
+	results := make([]*api.Rate, 1)
+	results[0] = &api.Rate{
+		UserID: rt.UserID,
+		RepoID: rt.RepoID,
+		Calificacion: rt.Calificacion,
+	}
+
+	ctx.JSON(200, map[string]interface{}{
+		"ok":   true,
+		"data": results,
+	})
+
 }

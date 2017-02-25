@@ -15,10 +15,11 @@ import (
 )
 
 type ToggleOptions struct {
-	SignInRequired  bool
-	SignOutRequired bool
-	AdminRequired   bool
-	DisableCSRF     bool
+	SignInRequired  	bool
+	SignOutRequired 	bool
+	AdminRequired   	bool
+	ProfessorRequired   bool
+	DisableCSRF    		bool
 }
 
 func Toggle(options *ToggleOptions) macaron.Handler {
@@ -89,6 +90,14 @@ func Toggle(options *ToggleOptions) macaron.Handler {
 				return
 			}
 			ctx.Data["PageIsAdmin"] = true
+		}
+
+		if options.ProfessorRequired {
+			if !ctx.User.IsProfessor(){
+				ctx.Handle(404, "", nil)
+				return
+			}
+			ctx.Data["PageIsProfessor"] = true
 		}
 	}
 }
