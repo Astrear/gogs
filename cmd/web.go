@@ -482,6 +482,7 @@ func runWeb(ctx *cli.Context) error {
 		m.Group("/leave", func() {
 			m.Combo("").Get(repo.LeaveRepo)
 			})
+
 		}, reqSignIn, context.RepoAssignment(), context.RepoRef())
 
 	m.Group("/:username/:reponame", func() {
@@ -628,6 +629,7 @@ func runWeb(ctx *cli.Context) error {
 	m.Group("/:username/:reponame", func() {
 		m.Group("", func() {
 			m.Get("/releases", repo.Releases)
+			m.Get("/search", repo.ThisRepoSearch)
 			m.Get("/contributions", repo.Contributions)
 			m.Get("/^:type(issues|pulls)$", repo.RetrieveLabels, repo.Issues)
 			m.Get("/^:type(issues|pulls)$/:index", repo.ViewIssue)

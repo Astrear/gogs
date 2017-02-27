@@ -283,7 +283,10 @@ func Home(ctx *context.Context) {
 	average := ctx.Repo.Repository.GetAverageRateRepo()
 	number := ctx.Repo.Repository.GetNumberAverageRateRepo()
 
-	rating, _ := ctx.Repo.Repository.GetUserRate(ctx.User.ID)
+	if ctx.IsSigned{
+		rating, _ := ctx.Repo.Repository.GetUserRate(ctx.User.ID)
+		ctx.Data["Rating"] = rating.Calificacion
+	}
 
 	ctx.Data["Paths"] = paths
 	ctx.Data["TreeLink"] = treeLink
@@ -294,7 +297,6 @@ func Home(ctx *context.Context) {
 	ctx.Data["HTags"] = htags
 	ctx.Data["Average"] = average
 	ctx.Data["Number"] = number
-	ctx.Data["Rating"] = rating.Calificacion
 	ctx.HTML(200, HOME)
 }
 

@@ -66,7 +66,6 @@ type RegisterForm struct {
 	Email    string `binding:"Required;Email;MaxSize(254)"`
 	Password string `binding:"Required;MaxSize(255)"`
 	Retype   string
-	Boleta	 string `binding:"Required;MaxSize(10)"`
 	Type 	 bool
 }
 

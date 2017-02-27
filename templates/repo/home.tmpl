@@ -9,7 +9,7 @@
 		</div>
 	<div class="ui centered  grid">
 		<div class="row">
-			<div class="ui {{if .IsSigned}}three{{else}}two{{end}} doubling cards">
+			<div class="ui three doubling cards">
 				<div class="card">
 					<div class="content">
 						<div class="header">
@@ -75,7 +75,6 @@
 					</div>
 				</div>
 				
-				{{if .IsSigned}}
 				<div class="card">
 					<div class="content">
 						<div class="header">{{.i18n.Tr "repo_global_rating"}}</div>
@@ -91,12 +90,13 @@
 							</div>
 					    </div>
 					</div>
+					{{if .IsSigned}}
 					<div class="extra">
 						{{.i18n.Tr "repo_rate"}}<br>
 							<div class="ui star rating" data-max-rating="10" data-user-id="{{.SignedUser.ID}}" data-repo-id="{{.Repository.ID}}"></div>
 					</div>
+					{{end}}
 				</div>
-				{{end}}
 
 				<div class="card">
 					<div class="content">
@@ -129,19 +129,19 @@
 				}
 
 				if(globalr > 0){
-					if (globalr > 0 && globalr <= 2){
+					if (globalr > 0 && globalr <= 3){
 						$('.label.rating-color').text('Muy Malo');
 						$('.rating-color').css('color', '#EC4060');
-					} else if(globalr > 2 && globalr <= 4){
+					} else if(globalr > 3 && globalr <= 5){
 						$('.label.rating-color').text('Malo');
 						$('.rating-color').css('color', '#E8993A');
-					} else if(globalr > 4 && globalr <= 6){
+					} else if(globalr > 5 && globalr <= 7){
 						$('.label.rating-color').text('Regular');
 						$('.rating-color').css('color', '#E0D541');
-					} else if(globalr > 6 && globalr <= 8){
+					} else if(globalr > 7 && globalr <= 9){
 						$('.label.rating-color').text('Bueno');
 						$('.rating-color').css('color', '#ABD846');
-					} else if(globalr > 8 && globalr <= 10){
+					} else if(globalr > 9 && globalr <= 10){
 						$('.label.rating-color').text('Excelente');
 						$('.rating-color').css('color', '#68CCDE');
 					} 

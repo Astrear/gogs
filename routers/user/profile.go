@@ -105,6 +105,7 @@ func Profile(ctx *context.Context) {
 			return
 		}
 		ctx.Data["Page"] = paginater.New(ctxUser.NumRepos, setting.UI.User.RepoPagingNum, page, 5)
+		ctx.Data["Points"] = ctxUser.Puntos
 	}
 
 	ctx.HTML(200, PROFILE)

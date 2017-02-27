@@ -112,6 +112,9 @@ type User struct {
 
 	// for student
 	Boleta string `xorm:"NOT NULL`
+
+	//Puntuacion
+	Puntos int64 `xorm:"NOT NULL DEFAULT 0"`
 }
 
 func (u *User) BeforeInsert() {

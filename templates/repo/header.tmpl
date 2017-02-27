@@ -3,6 +3,19 @@
 	<div class="ui container"><!-- start container -->
 		<div class="ui vertically padded grid head"><!-- start grid -->
 			<div class="column"><!-- start column -->
+				{{if not $.PageIsSearchThisRepo}}
+					<div class="ui segment">
+						<div class="ui category search">
+							<form id="form-search" action="{{$.RepoLink}}/search">
+								<div class="ui fluid icon input">
+									<input id="inputQuery" name="q" value="" placeholder='{{$.i18n.Tr "search_this_repo"}}...' required>
+									<i class="search icon"></i>
+								</div>
+							</form>
+							<div class="results"></div>
+						</div>
+					</div>
+				{{end}}
 				<div class="ui header">
 					<div class="ui huge breadcrumb">
 						{{if .IsPrivate}}
