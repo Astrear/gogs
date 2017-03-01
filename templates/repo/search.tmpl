@@ -12,7 +12,7 @@
 				<div class="ui fluid action input">
 					<input id="inputQuery" name="q" value="{{.Keyword}}" placeholder='{{$.i18n.Tr "search_this_repo"}}...' required>
 					<select class="ui compact selection dropdown" name="order" id="sort-search">
-						<option selected="" value="recent">{{$.i18n.Tr "recent"}}</option>
+						<option value="recent">{{$.i18n.Tr "recent"}}</option>
 						<option value="revert">{{$.i18n.Tr "old"}}</option>
 					</select>
 					<button type="submit" class="ui button green">{{$.i18n.Tr "search"}}</button>
@@ -21,8 +21,13 @@
 		</div>
 		
 		<h2 class="ui header">
-			{{$.i18n.Tr "repo.results_search"}}: Se encontraron <span style="color:orange">{{.Matches.NumberMatches}}</span> archivos con {{$.i18n.Tr "incidencias"}}
+			{{if .Matches}}
+				{{$.i18n.Tr "repo.results_search"}}: Se encontraron <span style="color:orange">{{.Matches.NumberMatches}}</span> archivos con {{$.i18n.Tr "incidencias"}}
+			{{else}}
+				{{$.i18n.Tr "repo.results_search"}}: Se encontraron <span style="color:orange">0</span> archivos con {{$.i18n.Tr "incidencias"}}
+			{{end}}
 		</h2>
+		{{if .Matches}}
 		<div class="ui divider"></div>
 		<div class="ui relaxed divided list">
 			{{range .Matches.Results}}
@@ -45,6 +50,18 @@
 			</div>
 			{{end}}
 		</div>
+		{{else}}
+		<div class="ui tertiary inverted segment">
+			<p align="center">No se han encontrado resultados</p>
+		</div>
+		{{end}}
+		
+		<div class="ui grid">
+			<div class="ui row centered">
+				<div class="ui pagination menu" style="display: none;" id="menu-paginador"></div>
+			</div>
+		</div>
+
 		<script type="text/javascript">
 			$('code').each(function (index, value) { 
 				var texto = $(this).html();
@@ -56,6 +73,23 @@
 				var href = $(this).attr("href");
 				href = href.replace(new RegExp("%0A", 'gi'), '');
 				$(this).attr("href",href);
+			});
+			$( document ).ready(function() {
+
+			    var currentPage = {{.CurrentPage}};
+			    var pages = {{.Pages}};
+			    if(pages > 1){
+			    	var paginador = '';
+			    	for(i=1; i<=pages; i++){
+			    		if(i == currentPage){
+			    			paginador += '<a class="item active" href="{{$.RepoLink}}/search?q={{.Keyword}}&order={{.Order}}&page='+i+'">'+i+'</a>';
+			    		}else{
+			    			paginador += '<a class="item" href="{{$.RepoLink}}/search?q={{.Keyword}}&order={{.Order}}&page='+i+'">'+i+'</a>';
+			    		}
+			    	}
+			    	$("#menu-paginador").html(paginador);
+					$("#menu-paginador").show();
+			    }
 			});
 		</script>
 	</div>

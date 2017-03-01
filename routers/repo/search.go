@@ -49,6 +49,7 @@ func RenderThisRepoSearch(ctx *context.Context, opts *ThisRepoSearchOptions) {
 	}
 
 	order := ctx.Query("order")
+
 	if order != "reverse" {
 		order = "--date-order"
 	} else {
@@ -57,15 +58,16 @@ func RenderThisRepoSearch(ctx *context.Context, opts *ThisRepoSearchOptions) {
 
 	var (
 		matches *git.MatchesResults
-		count int64
+		pages int64
 		err   error
 	)
 
 	keyword := ctx.Query("q")
-	if len(keyword) == 0 {
-		//matches = nil
+
+	if len(keyword) == 0 || len(keyword) < 6 {
+		matches = nil
 		err = nil
-		count = opts.Counter
+		err = ctx.Tr("search_this_repo_not_en")
 	} else {
 		matches, err = ctx.Repo.GitRepo.ShearchMatchesThisRepo(&git.RepoSearchOptions{
 			Keyword:  keyword,
@@ -74,22 +76,27 @@ func RenderThisRepoSearch(ctx *context.Context, opts *ThisRepoSearchOptions) {
 			PageSize: 10,
 		},)
 
+		count := matches.NumberMatches
+		if (count % 10) != 0 {
+			pages = (count / 10) + 1
+		} else {
+			pages = (count / 10)
+		}
+
 		if err != nil {
 			ctx.Handle(500, "ShearchMatchesThisRepo", err)
 			return
 		}
 	}
 
-	/*for _, element := range matches.Results{
-		fmt.Println(element.CommitID)
-	}*/
+	
 
 	ctx.Data["Keyword"] = keyword
-	ctx.Data["Total"] = count
+	ctx.Data["Order"] = ctx.Query("order")
 	ctx.Data["Matches"] = matches
-
+	ctx.Data["Pages"] = pages
+	ctx.Data["CurrentPage"] = page
+	ctx.Data["error"] = err
 
 	ctx.HTML(200, opts.TplName)
 }
-
-
