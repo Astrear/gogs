@@ -1045,6 +1045,14 @@ type SearchUserOptions struct {
 	PageSize int // Can be smaller than or equal to setting.UI.ExplorePagingNum
 }
 
+type SearchTopUsersOptions struct {
+	Keyword  string
+	Type     UserType
+	OrderBy  string
+	Page     int
+	PageSize int // Can be smaller than or equal to setting.UI.ExplorePagingNum
+}
+
 // SearchUserByName takes keyword and part of user name to search,
 // it returns results in given range and number of total results.
 func SearchUserByName(opts *SearchUserOptions) (users []*User, _ int64, _ error) {
@@ -1068,6 +1076,32 @@ func SearchUserByName(opts *SearchUserOptions) (users []*User, _ int64, _ error)
 		Or("LOWER(full_name) LIKE ?", searchQuery).
 		Or("email LIKE ?", searchQuery).
 		And("type = ?", opts.Type)
+
+	var countSess xorm.Session
+	countSess = *sess
+	count, err := countSess.Count(new(User))
+	if err != nil {
+		return nil, 0, fmt.Errorf("Count: %v", err)
+	}
+
+	if len(opts.OrderBy) > 0 {
+		sess.OrderBy(opts.OrderBy)
+	}
+	return users, count, sess.Limit(opts.PageSize, (opts.Page-1)*opts.PageSize).Find(&users)
+}
+
+func SearchTopUsers(opts *SearchTopUsersOptions) (users []*User, _ int64, _ error) {
+
+	if opts.PageSize <= 0 || opts.PageSize > setting.UI.ExplorePagingNum {
+		opts.PageSize = setting.UI.ExplorePagingNum
+	}
+	if opts.Page <= 0 {
+		opts.Page = 1
+	}
+
+	users = make([]*User, 0, opts.PageSize)
+	// Append conditions
+	sess := x.Where("type = ?", opts.Type).OrderBy("puntos DESC")
 
 	var countSess xorm.Session
 	countSess = *sess

@@ -3,6 +3,14 @@
 	{{template "repo/header" .}}
 	<div class="ui container">
 		{{template "base/alert" .}}
+		
+		{{if .PointsGained}}
+			<div class="ui positive message">
+			 	<i class="close icon cerrarMensaje"></i>
+				<p>{{.i18n.Tr "repo.points_gained"}}</p>
+			</div>
+		{{end}}
+
 		<div class="ui positive message hide" id="divMensajeCalificacion">
 		 	<i class="close icon cerrarMensaje"></i>
 			<p id="mensaje">La calificación ha sido actualizada</p>
@@ -121,7 +129,7 @@
 			$(document).ready(function($) {
 
 				$( ".cerrarMensaje" ).click(function() {
-					$("#divMensajeCalificacion").hide();
+					$(this).parent().hide();
 				});
 
 				if($('#repo-info').html().trim().length == 0){

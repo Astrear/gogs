@@ -33,6 +33,5 @@ func AddCollaborator(ctx *context.APIContext, form api.AddCollaboratorOption) {
 			return
 		}
 	}
-
 	ctx.Status(204)
 }

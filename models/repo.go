@@ -180,6 +180,7 @@ type Repository struct {
 	NumClosedMilestones int `xorm:"NOT NULL DEFAULT 0"`
 	NumOpenMilestones   int `xorm:"-"`
 	NumTags             int `xorm:"-"`
+	NumLists 			int
 
 	IsPrivate bool
 	IsBare    bool
@@ -1610,6 +1611,14 @@ type SearchRepoOptions struct {
 	PageSize int // Can be smaller than or equal to setting.ExplorePagingNum
 }
 
+type TopRepoSearchOptions struct {
+	OwnerID  int64
+	OrderBy  string
+	Private  bool // Include private repositories in results
+	Page     int
+	PageSize int // Can be smaller than or equal to setting.ExplorePagingNum
+}
+
 
 type AdvancedSearchRepoOptions struct {
 	Keyword  string
@@ -1622,6 +1631,38 @@ type AdvancedSearchRepoOptions struct {
 	Private  bool // Include private repositories in results
 	Page     int
 	PageSize int // Can be smaller than or equal to setting.ExplorePagingNum
+}
+
+
+func SearchTopRepositories(opts *TopRepoSearchOptions) (repos []*Repository, _ int64, _ error) {
+
+	if opts.Page <= 0 {
+		opts.Page = 1
+	}
+
+	repos = make([]*Repository, 0, opts.PageSize)
+
+	// Append conditions
+	sess := x.Cols("repository.id,repository.name, repository.owner_id, repository.description, repository.is_mirror, repository.is_private, repository.updated_unix, repository.num_stars,repository.semester_id,repository.group_id,repository.subject_id").
+		Join("INNER", "calificacion_repo", "repository.id = calificacion_repo.repo_id").
+		GroupBy("repository.id").OrderBy("(ROUND( AVG(calificacion_repo.calificacion),1 )) DESC")
+
+
+	if opts.OwnerID > 0 {
+		sess.And("owner_id = ?", opts.OwnerID)
+	}
+	if !opts.Private {
+		sess.And("is_private=?", false)
+	}
+
+	var countSess xorm.Session
+	countSess = *sess
+	count, err := countSess.Count(new(Repository))
+	if err != nil {
+		return nil, 0, fmt.Errorf("Count: %v", err)
+	}
+
+	return repos, count, sess.Limit(opts.PageSize, (opts.Page-1)*opts.PageSize).Find(&repos)
 }
 
 // SearchRepositoryByName takes keyword and part of repository name to search,
@@ -2462,6 +2503,10 @@ func (r *Repository) GetAverageRateRepo() (average string) {
 	return GetAverageRatingRepo(r.ID)
 }
 
+func (r *Repository) GetHTMLAverageRepo() template.HTML{
+	return template.HTML(GetAverageRatingRepo(r.ID))
+}
+
 func GetNumberAverageRatingRepo(repoID int64) (number string) {
 	results, err := x.Query("SELECT COUNT(*) as number FROM calificacion_repo WHERE repo_id=?", repoID)
 	if err != nil {
@@ -2505,3 +2550,15 @@ func UpdateRateUser(userID, repoID int64, calificacion int)(error){
 	return err
 }
 
+/*Funciones de clasificacion de usuarios*/
+func AddPointsUser(userID int64, puntos int)(error){
+	_, err := x.Exec("UPDATE `user` SET puntos = puntos + ? WHERE id = ?", puntos , userID)
+
+	return err
+}
+
+func SubtractPointsUser(userID int64, puntos int)(error){
+	_, err := x.Exec("UPDATE `user` SET puntos = puntos - ? WHERE id = ?", puntos , userID)
+
+	return err
+}

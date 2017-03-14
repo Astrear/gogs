@@ -353,6 +353,7 @@ func SettingsPost(ctx *context.Context, form auth.RepoSettingForm) {
 			ctx.Handle(500, "DeleteRepository", err)
 			return
 		}
+		models.SubtractPointsUser(ctx.User.ID, 20)
 		log.Trace("Repository deleted: %s/%s", ctx.Repo.Owner.Name, repo.Name)
 
 		ctx.Flash.Success(ctx.Tr("repo.settings.deletion_success"))

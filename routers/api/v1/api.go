@@ -20,6 +20,7 @@ import (
 	"github.com/gogits/gogs/routers/api/v1/misc"
 	"github.com/gogits/gogs/routers/api/v1/org"
 	"github.com/gogits/gogs/routers/api/v1/repo"
+	"github.com/gogits/gogs/routers/api/v1/board"
 	"github.com/gogits/gogs/routers/api/v1/semester"
 	"github.com/gogits/gogs/routers/api/v1/course"
 	"github.com/gogits/gogs/routers/api/v1/subject"
@@ -268,6 +269,26 @@ func RegisterRoutes(m *macaron.Macaron) {
 		m.Group("/repos", func() {
 			m.Get("/search", repo.Search)
 		})
+
+
+		
+		m.Group("/:username/:reponame", func() {
+			m.Group("/board", func() {
+				m.Group("/list", func(){
+					m.Combo("").Post(reqRepoWriter(), bind(api.CreateListOption{}), board.CreateList)
+					m.Combo("/:id").Get(repo.GetMilestone).
+						Patch(reqRepoWriter(), bind(api.EditListOption{}), board.EditList).
+						Delete(reqRepoWriter(), board.DeleteList)
+				})
+				m.Group("/card", func(){
+					m.Combo("").Post(reqRepoWriter(), bind(api.CreateCardOption{}), board.CreateCard)
+					m.Combo("/:list/:id").Get(repo.GetMilestone).
+						Patch(reqRepoWriter(), bind(api.EditCardOption{}), board.EditCard).
+						Delete(reqRepoWriter(), board.DeleteCard)
+				})
+				
+			})
+		}, repoAssignment())
 
 		m.Group("/repos", func() {
 			m.Post("/migrate", bind(auth.MigrateRepoForm{}), repo.Migrate)

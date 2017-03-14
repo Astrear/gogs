@@ -3,19 +3,6 @@
 	<div class="ui container"><!-- start container -->
 		<div class="ui vertically padded grid head"><!-- start grid -->
 			<div class="column"><!-- start column -->
-				{{if not $.PageIsSearchThisRepo}}
-					<div class="ui segment">
-						<div class="ui category search">
-							<form id="form-search" action="{{$.RepoLink}}/search">
-								<div class="ui fluid icon input">
-									<input id="inputQuery" name="q" value="" placeholder='{{$.i18n.Tr "search_this_repo"}}...' required>
-									<i class="search icon"></i>
-								</div>
-							</form>
-							<div class="results"></div>
-						</div>
-					</div>
-				{{end}}
 				<div class="ui header">
 					<div class="ui huge breadcrumb">
 						{{if .IsPrivate}}
@@ -92,6 +79,9 @@
 			</a>
 			<a class="{{if .PageIsReleaseList}}active{{end}} item" href="{{.RepoLink}}/releases">
 				<i class="octicon octicon-tag"></i> {{.i18n.Tr "repo.releases"}} <span class="ui {{if not .Repository.NumTags}}gray{{else}}blue{{end}} small label">{{.Repository.NumTags}}</span>
+			</a>
+			<a class="item" href="{{.RepoLink}}/board">
+				<i class="octicon octicon-tasklist"></i> Tareas
 			</a>
 			{{if .Repository.EnableWiki}}
 				<a class="{{if .PageIsWiki}}active{{end}} item" href="{{.RepoLink}}/wiki">

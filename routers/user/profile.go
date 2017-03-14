@@ -149,6 +149,7 @@ func Action(ctx *context.Context) {
 	switch ctx.Params(":action") {
 	case "follow":
 		err = models.FollowUser(ctx.User.ID, u.ID)
+		models.AddPointsUser(u.ID, 20)
 	case "unfollow":
 		err = models.UnfollowUser(ctx.User.ID, u.ID)
 	}

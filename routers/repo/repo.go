@@ -195,6 +195,8 @@ func CreatePost(ctx *context.Context, form auth.CreateRepoForm) {
 			models.StarRepo(form.Professor, repo.ID, true)
 		}
 
+		//AGREGAR PUNTOS PARA CLASIFICACION
+		models.AddPointsUser(ctxUser.ID, 20)
 		log.Trace("Repository created [%d]: %s/%s", repo.ID, ctxUser.Name, repo.Name)
 		ctx.Redirect(setting.AppSubUrl + "/" + ctxUser.Name + "/" + repo.Name)
 		return
@@ -301,6 +303,7 @@ func Action(ctx *context.Context) {
 		err = models.WatchRepo(ctx.User.ID, ctx.Repo.Repository.ID, false)
 	case "star":
 		err = models.StarRepo(ctx.User.ID, ctx.Repo.Repository.ID, true)
+		models.AddPointsUser(ctx.Repo.Repository.OwnerID, 10)
 	case "unstar":
 		err = models.StarRepo(ctx.User.ID, ctx.Repo.Repository.ID, false)
 	case "desc": // FIXME: this is not used

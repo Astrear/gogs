@@ -67,7 +67,7 @@ func RenderThisRepoSearch(ctx *context.Context, opts *ThisRepoSearchOptions) {
 	if len(keyword) == 0 || len(keyword) < 6 {
 		matches = nil
 		err = nil
-		err = ctx.Tr("search_this_repo_not_en")
+		//err = ctx.Tr("search_this_repo_not_en")
 	} else {
 		matches, err = ctx.Repo.GitRepo.ShearchMatchesThisRepo(&git.RepoSearchOptions{
 			Keyword:  keyword,

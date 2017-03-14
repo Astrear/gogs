@@ -28,6 +28,8 @@ const (
 	EXPLORE_GROUPS        base.TplName = "explore/groups"
 	EXPLORE_TAGS          base.TplName = "explore/tags"
 	EXPLORE_PROFESSORS    base.TplName = "explore/professors"
+	EXPLORE_TOPREPOS      base.TplName = "explore/toprepos"
+	EXPLORE_TOPUSERS      base.TplName = "explore/topusers"
 )
 
 func Home(ctx *context.Context) {
@@ -562,7 +564,123 @@ func ExploreTags(ctx *context.Context) {
 	})
 }
 
+
+type TopReposSearchOptions struct {
+	Counter  func(bool) int64
+	Ranger   func(int, int) ([]*models.Repository, error)
+	Private  bool
+	PageSize int
+	OrderBy  string
+	TplName  base.TplName
+}
+
+func RenderTopReposSearch(ctx *context.Context, opts *TopReposSearchOptions) {
+	page := ctx.QueryInt("page")
+	if page <= 0 {
+		page = 1
+	}
+
+	var (
+		repos []*models.Repository
+		count int64
+		err   error
+	)
+
+	repos, count, err = models.SearchTopRepositories(&models.TopRepoSearchOptions{
+		OrderBy:  opts.OrderBy,
+		Private:  opts.Private,
+		Page:     page,
+		PageSize: opts.PageSize,
+	})
+	if err != nil {
+		ctx.Handle(500, "SearchTopRepositories", err)
+		return
+	}
+
+	ctx.Data["Total"] = count
+	ctx.Data["Page"] = paginater.New(int(count), opts.PageSize, page, 5)
+
+	for _, repo := range repos {
+		if err = repo.GetOwner(); err != nil {
+			log.Trace("%s", repo)
+			ctx.Handle(500, "GetOwner", fmt.Errorf("%d: %v", repo.ID, err))
+			return
+		}
+	}
+	ctx.Data["Repos"] = repos
+
+	ctx.HTML(200, opts.TplName)
+}
+
+func ExploreTopRepos(ctx *context.Context) {
+	ctx.Data["Title"] = ctx.Tr("explore")
+	ctx.Data["PageIsExplore"] = true
+	ctx.Data["PageIsExploreTopRepos"] = true
+
+	RenderTopReposSearch(ctx, &TopReposSearchOptions{
+		Counter:  models.CountRepositories,
+		Ranger:   models.GetRecentUpdatedRepositories,
+		PageSize: setting.UI.ExplorePagingNum,
+		OrderBy:  "repository.updated_unix DESC",
+		TplName:  EXPLORE_TOPREPOS,
+	})
+}
+
 func NotFound(ctx *context.Context) {
 	ctx.Data["Title"] = "Page Not Found"
 	ctx.Handle(404, "home.NotFound", nil)
+}
+
+type TopUsersSearchOptions struct {
+	Type     models.UserType
+	Counter  func() int64
+	Ranger   func(int, int) ([]*models.User, error)
+	PageSize int
+	OrderBy  string
+	TplName  base.TplName
+}
+
+func RenderTopUsersSearch(ctx *context.Context, opts *TopUsersSearchOptions) {
+	page := ctx.QueryInt("page")
+	if page <= 1 {
+		page = 1
+	}
+
+	var (
+		users []*models.User
+		count int64
+		err   error
+	)
+
+	users, count, err = models.SearchTopUsers(&models.SearchTopUsersOptions{
+		Type:     opts.Type,
+		OrderBy:  opts.OrderBy,
+		Page:     page,
+		PageSize: opts.PageSize,
+	})
+	if err != nil {
+		ctx.Handle(500, "SearchTopUsers", err)
+		return
+	}
+
+	ctx.Data["Total"] = count
+	ctx.Data["Page"] = paginater.New(int(count), opts.PageSize, page, 5)
+	ctx.Data["Users"] = users
+
+	ctx.HTML(200, opts.TplName)
+}
+
+func ExploreTopUsers(ctx *context.Context) {
+	ctx.Data["Title"] = ctx.Tr("explore")
+	ctx.Data["PageIsExplore"] = true
+	ctx.Data["PageIsExploreTopUsers"] = true
+
+	RenderTopUsersSearch(ctx, &TopUsersSearchOptions{
+		Type:     models.USER_TYPE_INDIVIDUAL,
+		Counter:  models.CountUsers,
+		Ranger:   models.Users,
+		PageSize: setting.UI.ExplorePagingNum,
+		OrderBy:  "updated_unix DESC",
+		TplName:  EXPLORE_TOPUSERS,
+	})
 }

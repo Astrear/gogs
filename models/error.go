@@ -430,6 +430,68 @@ func (err ErrRepoFileAlreadyExist) Error() string {
 	return fmt.Sprintf("repository file already exists [file_name: %s]", err.FileName)
 }
 
+
+//  .__  .__          __          
+//  |  | |__| _______/  |_  ______
+//  |  | |  |/  ___/\   __\/  ___/
+//  |  |_|  |\___ \  |  |  \___ \ 
+//  |____/__/____  > |__| /____  >
+//               \/            \/ 
+// 
+
+
+type ErrListAlreadyExist struct {
+	RepoID  int64
+	Title   string
+}
+
+func IsErrListAlreadyExist(err error) bool {
+	_, ok := err.(ErrListAlreadyExist)
+	return ok
+}
+
+func (err ErrListAlreadyExist) Error() string {
+	return fmt.Sprintf("list already exists in repo [repo_id: %s, title: %s]", err.RepoID, err.Title)
+}
+
+type ErrListNotExist struct {
+	ID     int64
+	RepoID int64
+	Index  int64
+}
+
+func IsErrListNotExist(err error) bool {
+	_, ok := err.(ErrListNotExist)
+	return ok
+}
+
+func (err ErrListNotExist) Error() string {
+	return fmt.Sprintf("list does not exist [id: %d, repo_id: %d, index: %d]", err.ID, err.RepoID, err.Index)
+}
+
+
+//  _________                  .___
+//  \_   ___ \_____ _______  __| _/
+//  /    \  \/\__  \\_  __ \/ __ | 
+//  \     \____/ __ \|  | \/ /_/ | 
+//   \______  (____  /__|  \____ | 
+//          \/     \/           \/ 
+
+type ErrCardNotExist struct {
+	ID     int64
+	ListID int64
+	Index  int64
+}
+
+func IsErrCardNotExist(err error) bool {
+	_, ok := err.(ErrCardNotExist)
+	return ok
+}
+
+func (err ErrCardNotExist) Error() string {
+	return fmt.Sprintf("card does not exist [id: %d, list_id: %d, index: %d]", err.ID, err.ListID, err.Index)
+}
+
 // __________                             .__
 // \______   \____________    ____   ____ |  |__
 //  |    |  _/\_  __ \__  \  /    \_/ ___\|  |  \

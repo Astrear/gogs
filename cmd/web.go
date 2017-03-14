@@ -220,6 +220,8 @@ func runWeb(ctx *cli.Context) error {
 		m.Get("/groups", routers.ExploreGroups)
 		m.Get("/subjects", routers.ExploreSubjects)
 		m.Get("/tags", routers.ExploreTags)
+		m.Get("/topRepos", routers.ExploreTopRepos)
+		m.Get("/topUsers", routers.ExploreTopUsers)
 		m.Get("/advanced", routers.AdvancedSearch)
 
 	}, ignSignIn)
@@ -482,7 +484,9 @@ func runWeb(ctx *cli.Context) error {
 		m.Group("/leave", func() {
 			m.Combo("").Get(repo.LeaveRepo)
 			})
-
+		m.Group("/board", func(){
+			m.Get("", repo.Board)
+			})
 		}, reqSignIn, context.RepoAssignment(), context.RepoRef())
 
 	m.Group("/:username/:reponame", func() {

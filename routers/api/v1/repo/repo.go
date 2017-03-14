@@ -315,6 +315,18 @@ func EvaluateRepo(ctx *context.APIContext) {
 		}
 	}
 
+	models.AddPointsUser(userID, 10)
+
+	if (calificacion >= 8){
+		repo,_ := models.GetRepositoryByID(repoID)
+		models.AddPointsUser(repo.OwnerID, 20)
+	}
+
+	if (calificacion <= 5){
+		repo,_ := models.GetRepositoryByID(repoID)
+		models.SubtractPointsUser(repo.OwnerID, 25)
+	}
+
 	results := make([]*api.Rate, 1)
 	results[0] = &api.Rate{
 		UserID: rt.UserID,

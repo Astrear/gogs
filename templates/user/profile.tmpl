@@ -79,37 +79,24 @@
 							{{end}}
 						</ul>
 					</div>
-					<div class="extra content">
-						<script type="text/javascript">
-							$( document ).ready(function() {
-							    var puntuacion = "{{.Points}}";
-							    if(puntuacion>= 0 && puntuacion<=200){
-							    	$("#rango-usuario").html("Noob");
-							    }
-							    if(puntuacion>= 200 && puntuacion<=500){
-							    	$("#rango-usuario").html("Amateur");
-							    	$("#rango-img").attr("src","https://s-media-cache-ak0.pinimg.com/564x/5f/c9/55/5fc955d58c1b0906de9d2dfdb26332f9.jpg");
-							    }
-							    if(puntuacion>= 500 && puntuacion<=800){
-							    	$("#rango-usuario").html("Pro");
-							    	$("#rango-img").attr("src","https://img.clipartfest.com/83ae1bd6e0db2e680a030a1b62cef577_silver-star-military-bronze-star-medal-clipart-vector_169-299.png");
-							    }
-							    if(puntuacion>= 800 && puntuacion<=1200){
-							    	$("#rango-usuario").html("Boss");
-							    	$("#rango-img").attr("src","https://upload.wikimedia.org/wikipedia/commons/9/93/Meritorious_Service_Medal_(United_States).png");
-							    }
-							    if(puntuacion>1200){
-							    	$("#rango-usuario").html("Master");
-							    	$("#rango-img").attr("src","https://s-media-cache-ak0.pinimg.com/736x/ea/e7/f4/eae7f42964782cdfe721b033614eef47.jpg");
-							    }
-							});
-						</script>
+					<div class="extra centered content">
 						<center>
-								<img id="rango-img" data-points="{{.Points}}" style="max-width: 200px; max-height: 200px;" src="https://img.clipartfest.com/169bac7226cdb001b2edf31e4a2a86ee_-bronze-star-military-bronze-star-medal-clipart-vector_800-1200.jpeg" title="Rango del Usuario">
+							<div class="statistic">
+								<div class="value">
+									<span>{{.Owner.Puntos}} Puntos</span>
+								</div>
+								<div class="label">
+									{{if lt .Owner.Puntos 250}}{{.i18n.Tr "ranks.bronze"}}{{else if lt .Owner.Puntos 500}}{{.i18n.Tr "ranks.silver"}}{{else if lt .Owner.Puntos 1000}}{{.i18n.Tr "ranks.gold"}}{{else if lt .Owner.Puntos 1500}}{{.i18n.Tr "ranks.platinum"}}{{else if lt .Owner.Puntos 2500}}{{.i18n.Tr "ranks.diamond"}}{{else}}{{.i18n.Tr "ranks.master"}}{{end}}
+								</div>
+							</div>
+							<br>
+							<img id="rango-img" data-points="{{.Points}}" style="max-width: 200px; max-height: 200px;" src="{{AppSubUrl}}/img/{{if lt .Owner.Puntos 250}}Bronze.png{{else if lt .Owner.Puntos 500}}Silver.png{{else if lt .Owner.Puntos 1000}}Gold.png{{else if lt .Owner.Puntos 1500}}Platinum.png{{else if lt .Owner.Puntos 2500}}Diamond.png{{else}}GrandMaster.png{{end}}" title="Rango del Usuario">
+
 						</center>
-					</div>
-					<div class="content">
-						<span class="header text center" id="rango-usuario"></span>
+						<div class="ui indicating progress" data-value="{{.Owner.Puntos}}" data-total="{{if lt .Owner.Puntos 250}}250{{else if lt .Owner.Puntos 500}}500{{else if lt .Owner.Puntos 1000}}1000{{else if lt .Owner.Puntos 1500}}1500{{else if lt .Owner.Puntos 2500}}2500{{else}}10000{{end}}" id="rank">
+							<div class="bar"></div>
+							<div class="label">No tienes puntos</div>
+						</div>
 					</div>
 				</div>
 			</div>
@@ -138,3 +125,16 @@
 	</div>
 </div>
 {{template "base/footer" .}}
+
+<script type="text/javascript">
+	$('#rank')
+	  .progress({
+	    text: {
+	      active  : '{left} para el siguiente nivel',
+	      success : '¬¬',
+	      error   : '¬¬',
+	      warning : '¬¬'
+	    }
+	  })
+	;
+</script>

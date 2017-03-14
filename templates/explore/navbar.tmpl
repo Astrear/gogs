@@ -25,6 +25,14 @@
 		<!--<a class="{{if .PageIsExploreOrganizations}}active{{end}} item" href="{{AppSubUrl}}/explore/organizations">
 			<span class="octicon octicon-organization"></span> {{.i18n.Tr "explore.organizations"}}
 		</a>-->
+		<a class="{{if .PageIsExploreTopRepos}}active{{end}} item" href="{{AppSubUrl}}/explore/topRepos">
+			<span class="octicon octicon-thumbsup"></span> {{.i18n.Tr "explore.reporated"}}
+		</a>
+
+		<a class="{{if .PageIsExploreTopUsers}}active{{end}} item" href="{{AppSubUrl}}/explore/topUsers">
+			<span class="octicon octicon-repo-force-push"></span> {{.i18n.Tr "explore.usersrated"}}
+		</a>
+
 		<a class="{{if .PageIsExploreAdvanced}}active{{end}} item" href="{{AppSubUrl}}/explore/advanced">
 			<span class="octicon octicon-telescope"></span> {{.i18n.Tr "explore.advanced"}}
 		</a>

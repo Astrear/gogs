@@ -69,7 +69,7 @@ func init() {
 		new(UpdateTask), new(HookTask),new(TagsRepo),
 		new(Team), new(OrgUser), new(TeamUser), new(TeamRepo),
 		new(Notice), new(EmailAddress),
-		new(Semester), new(Group), new (Tag), new (CalificacionRepo))
+		new(Semester), new(Group), new (Tag), new (CalificacionRepo), new(List), new(Card))
 
 	gonicNames := []string{"SSL"}
 	for _, name := range gonicNames {

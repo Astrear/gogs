@@ -32,11 +32,11 @@
 	{{end}}
 
 	<!-- Stylesheet -->
-	<link rel="stylesheet" href="{{AppSubUrl}}/css/semantic-2.2.1.min.css">
+	<link rel="stylesheet" href="{{AppSubUrl}}/css/semantic.min.css">
 	<link rel="stylesheet" href="{{AppSubUrl}}/css/gogs.css?v={{MD5 AppVer}}">
 
 	<!-- JavaScript -->
-	<script src="{{AppSubUrl}}/js/semantic-2.2.1.min.js"></script>
+	<script src="{{AppSubUrl}}/js/semantic.min.js"></script>
 	<script src="{{AppSubUrl}}/js/gogs.js?v={{MD5 AppVer}}"></script>
 
 	<title>{{if .Title}}{{.Title}} - {{end}}{{AppName}}</title>
@@ -109,6 +109,24 @@
 													-->
 												</div><!-- end content create new menu -->
 											</div><!-- end dropdown menu create new -->
+										{{end}}
+
+										{{if .Repository}}
+											<div class="item">
+												<form id="form-search" action="{{$.RepoLink}}/search">
+													<div class="ui icon input" id="input-search">
+													  <input placeholder='{{$.i18n.Tr "search_this_repo"}}' type="text" id="inputQuery" name="q" required>
+													  <i class="circular search link icon"></i>
+													</div>
+												</form>
+											</div>
+											<script>
+												$(function(){
+													$("#form-search").submit(function(event) {
+														$("#input-search").addClass('loading');
+													});
+												})
+											</script>
 										{{end}}
 
 										<div class="ui dropdown head link jump item poping up" data-content="{{.i18n.Tr "create_new"}}" data-variation="tiny inverted">
