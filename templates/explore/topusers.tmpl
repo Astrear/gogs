@@ -1,0 +1,72 @@
+{{template "base/head" .}}
+<div class="explore users">
+	<div class="ui container">
+		<div class="ui grid">
+			{{template "explore/navbar" .}}
+			<div class="twelve wide column content">
+				<div class="ui middle aligned animated list">
+					<div class="ui info icon message">
+					  <i class="bar chart icon"></i>
+					  <div class="content">
+					    <div class="header">
+					      Lista de los 25 usuarios con mas puntos en el sistema
+					    </div>
+					  </div>
+					</div>
+					{{range .Users}}
+					<div class="item top-user">
+						<img class="ui avatar image" src="{{.RelAvatarLink}}">
+						<div class="content">
+							<div class="header"><a href="{{.HomeLink}}">{{.Name}}</a></div>
+							<div class="meta">
+								<i class="octicon octicon-clock"></i> {{$.i18n.Tr "user.join_on"}} {{DateFmtShort .Created}}
+							</div>
+							{{if .Location}}
+							<i class="octicon octicon-location"></i> {{.Location}}
+							{{end}}
+							{{if and .Email $.IsSigned}}
+							<i class="octicon octicon-mail"></i>
+							<a href="mailto:{{.Email}}" rel="nofollow">{{.Email}}</a>
+							{{end}}
+						</div>
+					</div>
+					<div class="ui popup bottom left transition hidden">
+						<div class="ui padded centered grid">
+							<div class="card" style="min-height: 150px; min-width: 150px;">
+								<div class="content">
+									<div class="ui sub header">{{.FullName}}</div>
+									<div class="meta"><span>{{if lt .Puntos 250}}{{$.i18n.Tr "ranks.bronze"}}{{else if lt .Puntos 500}}{{$.i18n.Tr "ranks.silver"}}{{else if lt .Puntos 1000}}{{$.i18n.Tr "ranks.gold"}}{{else if lt .Puntos 1500}}{{$.i18n.Tr "ranks.platinum"}}{{else if lt .Puntos 2500}}{{$.i18n.Tr "ranks.diamond"}}{{else}}{{$.i18n.Tr "ranks.master"}}{{end}}</span></div>
+									<div class="description">
+										<img class="ui circular inline image" data-points="{{.Puntos}}" style="max-height: 6rem;" src="{{AppSubUrl}}/img/{{if lt .Puntos 250}}Bronze.png{{else if lt .Puntos 500}}Silver.png{{else if lt .Puntos 1000}}Gold.png{{else if lt .Puntos 1500}}Platinum.png{{else if lt .Puntos 2500}}Diamond.png{{else}}GrandMaster.png{{end}}" title="Rango del Usuario">
+									</div>
+									<div class="description">
+										<div class="ui tiny statistic">
+											<div class="value">
+												{{.Puntos}}
+											</div>
+											<div class="label">
+												Puntos
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+					{{end}}
+				</div>
+				{{template "explore/page" .}}
+			</div>
+		</div>
+	</div>
+</div>
+<script type="text/javascript">
+	$('.top-user')
+	.popup({
+		inline     : true,
+		hoverable  : true,
+		position   : 'bottom right',
+	})
+	;
+</script>
+{{template "base/footer" .}}

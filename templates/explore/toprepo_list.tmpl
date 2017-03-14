@@ -1,0 +1,98 @@
+<style>
+	.ui.repository.list .item:not(:first-child) {
+		border: 0;
+		padding-top: 0;
+	}
+</style>
+<div class="ui repository list">
+	{{range .Repos}}
+		<div class="ui fluid card">
+			<div class="content">
+				<div class="ui right metas">
+					<span class="text grey"><i class="octicon octicon-star"></i> {{.NumStars}}</span>
+				</div>
+				<div class="header">
+					<a class="name" href="{{AppSubUrl}}/{{if .Owner}}{{.Owner.Name}}{{else if $.Org}}{{$.Org.Name}}{{else}}{{$.Owner.Name}}{{end}}/{{.Name}}">{{if $.PageIsExplore}}{{.Owner.Name}} / {{end}}{{.Name}}</a>
+					{{if .IsPrivate}}
+						<span class="text gold"><i class="octicon octicon-lock"></i></span>
+					{{else if .IsFork}}
+						<span><i class="octicon octicon-repo-forked"></i></span>
+					{{else if .IsMirror}}
+						<span><i class="octicon octicon-repo-clone"></i></span>
+					{{end}}
+				</div>
+				<div class="meta">
+					{{$.i18n.Tr "org.repo_updated"}} {{TimeSince .Updated $.i18n.Lang}}
+				</div>
+				<div class="description">
+					{{if .DescriptionHtml}}<p class="has-emoji">{{.DescriptionHtml}}</p>{{end}}
+					{{if .SemesterID}}
+					<a class="ui image label" href="/explore/repos?q={{.GetSemesterName}}">
+					  <i class="calendar icon"></i>
+					  Semestre
+					  <div class="detail">{{.GetSemesterName}}</div>
+					</a>
+					{{end}}
+
+					{{if .GroupID}}
+					<a class="ui image label" href="/explore/repos?q={{.GetGroupName}}">
+					  <i class="users icon"></i>
+					  Grupo
+					  <div class="detail">{{.GetGroupName}}</div>
+					</a>
+					{{end}}
+
+					{{if .SubjectID}}
+					<a class="ui image label" href="/explore/repos?q={{.GetSubjectName}}">
+					  <i class="book icon"></i>
+					  Materia
+					  <div class="detail">{{.GetSubjectName}}</div>
+					</a>
+					{{end}}
+					<br>
+					{{if .GetTags}}
+						<div class="ui horizontal list" style="">
+						{{range .GetTags}}
+							<div class="item" style="padding-bottom: 0;">
+								<a class="ui tiny label" href="/explore/repos?q={{.Etiqueta}}">
+								  <i class="tag icon"></i>
+								  {{.Etiqueta}}
+								</a>
+							</div>
+						{{end}}
+						</div>
+					{{end}}
+				</div>
+			</div>
+			<div class="extra content">
+				<div class="ui label calificacion" title="Calificación del Repositorio"><i class="icon"><img height="12" width="12" src="http://www.myiconfinder.com/uploads/iconsets/128-128-aab630a4fbcd8b3718c4dd5f301fd060-trophy.png"></i><span class="spanCalf" style="position: relative; top: -2px">{{.GetHTMLAverageRepo}}</span>
+				</div>
+			</div>
+		</div>
+		
+		<script>
+			$( ".spanCalf" ).each(function() {
+				var calf = parseFloat($( this ).html());
+				if (calf == 0){
+					$(this).html("Sin calificación");
+				}
+				if (calf > 0 && calf <= 3){
+					$(this).html(calf + ' - Muy Malo');
+					$(this).parent().addClass("red");
+				} else if(calf > 3 && calf <= 5){
+					$(this).html(calf + ' - Malo');
+					$(this).parent().addClass("orange");
+				} else if(calf > 5 && calf <= 7){
+					$(this).html(calf + ' - Regular');
+					$(this).parent().addClass("yellow");
+				} else if(calf > 7 && calf <= 9){
+					$(this).html(calf + ' - Bueno');
+					$(this).parent().addClass("green");
+				} else if(calf > 9 && calf <= 10){
+					$(this).html(calf + ' - Excelente');
+					$(this).parent().addClass("blue");
+				} 
+			});
+		</script>
+	{{end}}
+</div>
