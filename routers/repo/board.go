@@ -6,8 +6,8 @@ package repo
 
 import (
 	"fmt"
-
-	//"github.com/gogits/gogs/models"
+	"strings"
+	"github.com/gogits/gogs/models"
 	//"github.com/gogits/gogs/modules/auth"
 	"github.com/gogits/gogs/modules/base"
 	"github.com/gogits/gogs/modules/context"
@@ -20,18 +20,26 @@ const (
 )
 
 func Board(ctx *context.Context) {
-	ctx.Data["Title"] = ctx.Tr("repo.release.board")
-	ctx.Data["PageIsBoardList"] = true
+	ctx.Data["Title"] = ctx.Tr("board")
+	ctx.Data["PageIsBoard"] = true
 
 	lists, err := ctx.Repo.Repository.GetLists()
 	if err != nil {
 		ctx.Handle(500, "Lists", err)
 		return
 	}
-	for _, item := range lists {
-		fmt.Println("%+v", item)
-		for _, list := range item.Cards {
-			fmt.Println("%+v", list)
+	var noncoll []string
+	for _, list := range lists {
+		for _, card := range list.Cards {
+			if models.IsCollaboratorOfRepo(card.AssigneeID, ctx.Repo.Repository.ID) == false {
+				if user, err := models.GetUserByID(card.AssigneeID); err == nil{
+					if(user.ID != ctx.Repo.Repository.OwnerID){
+						if !isInSlice(user.Name, noncoll) {
+							noncoll = append(noncoll, user.Name)
+						}
+					}
+				} 
+			}
 		}
 	}
 
@@ -39,8 +47,18 @@ func Board(ctx *context.Context) {
 	if err != nil {
 		fmt.Println("GetCollaborators: %v", err)
 	}
-
+	
 	ctx.Data["Lists"] = lists
 	ctx.Data["Collaborators"] = collaborators
+	ctx.Data["NonColl"] = strings.Join(noncoll,",")
 	ctx.HTML(200, BOARD)
+}
+
+func isInSlice(item string, slice []string) bool {
+	for _, element := range slice {
+		if element == item {
+			return true
+		}
+	}
+	return false
 }

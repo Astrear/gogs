@@ -9,7 +9,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
-
+	"fmt"
 	"github.com/gogits/gogs/models"
 	"github.com/gogits/gogs/modules/auth"
 	"github.com/gogits/gogs/modules/base"
@@ -551,6 +551,15 @@ func CollaborationPost(ctx *context.Context) {
 			models.SendCollaboratorMail(u, ctx.User, ctx.Repo.Repository)
 		}
 
+		//SEND NOTIFICATION
+		repoName := ctx.Repo.Repository.Name;
+		message := ctx.User.Name + " te añadio como colaborador a " + repoName
+		errNotification := models.CreateNotification(u.ID, message, 1)
+		if errNotification != nil{
+			fmt.Errorf("Error at CreateNotification: %v", errNotification)
+		}
+		//SEND NOTIFICATION
+
 		ctx.Flash.Success(ctx.Tr("repo.settings.add_collaborator_success"))
 		ctx.Redirect(setting.AppSubUrl + ctx.Req.URL.Path)
 	}
@@ -582,11 +591,64 @@ func LeaveRepo(ctx *context.Context){
 		if err := repo.DeleteCollaboration(ctx.QueryInt64("cUser")); err != nil {
 			ctx.Flash.Error("DeleteCollaboration: " + err.Error())
 		} else {
+			u,_:= models.GetUserByID(ctx.QueryInt64("cUser"))
+			
+			if setting.Service.EnableNotifyMail {
+				owner,_:= models.GetUserByID(ctx.Repo.Owner.ID)
+				models.SendCollaboratorLeaveMail(u, owner, ctx.Repo.Repository)
+			}
+
+			//SEND NOTIFICATION
+			repoName := ctx.Repo.Repository.Name;
+			message := u.Name + " ha abandonado el repositorio " + repoName
+			errNotification := models.CreateNotification(ctx.Repo.Owner.ID, message, 2)
+			if errNotification != nil{
+				fmt.Errorf("Error at CreateNotification: %v", errNotification)
+			}
+			//SEND NOTIFICATION
 			ctx.Redirect(repo.Link())
 		}
 	} else {
 		ctx.Redirect(repo.Link())
 	}
+}
+
+func CloseRepo(ctx *context.Context){
+	repo := ctx.Repo.Repository
+	collaboratos, _ := repo.GetCollaborators()
+	for _, c := range collaboratos {
+		repo.ChangeCollaborationAccessMode(c.User.ID, models.ACCESS_MODE_READ)
+		message := "Se ha cerrado el repositorio " + repo.Owner.Name + "/" + repo.Name +" donde colaboraba"
+		errNotification := models.CreateNotification(c.User.ID, message, 6)
+		if errNotification != nil{
+			fmt.Errorf("Error at CreateNotification in CloseRepo: %v", errNotification)
+		}
+	}
+	err := repo.CloseRepoUpdate()
+	if err != nil{
+		fmt.Errorf("CloseRepoUpdate: %v", err)
+	}
+	ctx.Redirect(repo.Link())
+}
+
+func OpenRepo(ctx *context.Context){
+	repo := ctx.Repo.Repository
+	collaboratos, _ := repo.GetCollaborators()
+	for _, c := range collaboratos {
+		if c.User.Type != models.USER_TYPE_PROFESSOR {
+			repo.ChangeCollaborationAccessMode(c.User.ID, models.ACCESS_MODE_WRITE)
+		}
+		message := "Se ha re-abierto el repositorio " + repo.Owner.Name + "/" + repo.Name +" donde colaboraba"
+		errNotification := models.CreateNotification(c.User.ID, message, 7)
+		if errNotification != nil{
+			fmt.Errorf("Error at CreateNotification in CloseRepo: %v", errNotification)
+		}
+	}
+	err := repo.OpenRepoUpdate()
+	if err != nil{
+		fmt.Errorf("OpenRepoUpdate: %v", err)
+	}
+	ctx.Redirect(repo.Link())
 }
 
 func parseOwnerAndRepo(ctx *context.Context) (*models.User, *models.Repository) {

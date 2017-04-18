@@ -1,0 +1,11 @@
+<div class="four wide column">
+	<div class="ui vertical menu">
+		<div class="header item">{{.i18n.Tr "notifications"}}</div>
+		<a class="{{if .PageIsNotifications}}active{{end}} item" href="{{AppSubUrl}}/notifications">
+			{{.i18n.Tr "unwatchednotifications"}}
+		</a>
+		<a class="{{if .PageIsAllNotifications}}active{{end}} item" href="{{AppSubUrl}}/notifications/all">
+			{{.i18n.Tr "allnotifications"}}
+		</a>
+	</div>
+</div>

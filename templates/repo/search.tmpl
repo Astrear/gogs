@@ -4,7 +4,7 @@
 	<div class="ui container">
 		{{template "base/alert" .}}
 		<script>
-			hljs.initHighlightingOnLoad();
+			
 			var query = "{{.Keyword}}";
 		</script>
 		<div class="ui category search">
@@ -39,8 +39,8 @@
 					</h4>
 					<div class="ui attached table segment">
 						<div class="file-view code-view">
-							<pre style="margin-bottom: -4%;">
-								<code style="margin-left: 2%; margin-top: -3.5%; overflow: hidden;">
+							<pre style="margin-left: 5px; margin-bottom: -3.5%;">
+								<code style="margin-top: -1.5%; display: block; overflow-x: inherit;" data-path="{{.Path}}">
 									{{.Content}}
 								</code>
 							</pre>
@@ -65,8 +65,9 @@
 		<script type="text/javascript">
 			$('code').each(function (index, value) { 
 				var texto = $(this).html();
+				var path = $(this).attr("data-path");
 				var nuevo = texto.replace(new RegExp(query, 'gi'), '<span style="background-color: yellow">'+query+'</span>');
-				nuevo = nuevo.substring(nuevo.indexOf("\n") + 1);
+				nuevo = nuevo.substring(nuevo.indexOf(path) + path.length);
 				$(this).html(nuevo);
 			});
 			$('.file_link').each(function (index, value) {

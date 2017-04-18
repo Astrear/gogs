@@ -252,7 +252,7 @@ func SearchTagByName(opts *SearchTagOptions) (tags []*Tag, _ int64, _ error) {
 	searchQuery := "%" + opts.Keyword + "%"
 	tags = make([]*Tag, 0, opts.PageSize)
 	// Append conditions
-	sess := x.Where("etiqueta LIKE ?", searchQuery)
+	sess := x.Where("etiqueta LIKE ?", searchQuery).Asc("etiqueta")
 
 	var countSess xorm.Session
 	countSess = *sess

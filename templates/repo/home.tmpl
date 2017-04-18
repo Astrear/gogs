@@ -170,9 +170,11 @@
 					    </div>
 				    	<div class="ui equal width mini horizontal list">
 				    		{{if .IsRepositoryAdmin}}
-				    		<a class="ui right corner label" href="{{.RepoLink}}/settings/collaboration">
-						        <i class="plus icon"></i>
-						    </a>
+				    			{{if not .Repository.IsClosed}}
+						    		<a class="ui right corner label" href="{{.RepoLink}}/settings/collaboration">
+								        <i class="plus icon"></i>
+								    </a>
+								{{end}}
 						    {{end}}
 						  	{{range .Collaborators}}
 							<div class="item">
@@ -203,11 +205,13 @@
 							</div>
 							{{end}}
 							{{if .IsRepositoryAdmin}}
-							<div class="item">
-							    <a class="ui compact mini icon button" href="{{.RepoLink}}/settings/tags">
-								  <i class="plus icon"></i>
-								</a>
-							</div>
+								{{if not .Repository.IsClosed}}
+									<div class="item">
+									    <a class="ui compact mini icon button" href="{{.RepoLink}}/settings/tags">
+										  <i class="plus icon"></i>
+										</a>
+									</div>
+								{{end}}
 						    {{end}}
 						</div>
 				</div>
@@ -243,14 +247,18 @@
 				{{if .Repository.CanEnableEditor}}
 					<div id="file-buttons" class="ui tiny blue buttons">
 						{{if .CanAddFile}}
-							<a href="{{.RepoLink}}/_new/{{EscapePound .BranchName}}/{{EscapePound .TreePath}}" class="ui button">
-								{{.i18n.Tr "repo.editor.new_file"}}
-							</a>
+							{{if not .Repository.IsClosed}}
+								<a href="{{.RepoLink}}/_new/{{EscapePound .BranchName}}/{{EscapePound .TreePath}}" class="ui button">
+									{{.i18n.Tr "repo.editor.new_file"}}
+								</a>
+							{{end}}
 						{{end}}
 						{{if .CanUploadFile}}
-							<a href="{{.RepoLink}}/_upload/{{EscapePound .BranchName}}/{{EscapePound .TreePath}}" class="ui button">
-								{{.i18n.Tr "repo.editor.upload_file"}}
-							</a>
+							{{if not .Repository.IsClosed}}
+								<a href="{{.RepoLink}}/_upload/{{EscapePound .BranchName}}/{{EscapePound .TreePath}}" class="ui button">
+									{{.i18n.Tr "repo.editor.upload_file"}}
+								</a>
+							{{end}}
 						{{end}}
 					</div>
 				{{end}}

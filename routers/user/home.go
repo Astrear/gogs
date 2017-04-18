@@ -18,10 +18,12 @@ import (
 )
 
 const (
-	DASHBOARD base.TplName = "user/dashboard/dashboard"
-	ISSUES    base.TplName = "user/dashboard/issues"
-	PROFILE   base.TplName = "user/profile"
-	ORG_HOME  base.TplName = "org/home"
+	DASHBOARD 			base.TplName = "user/dashboard/dashboard"
+	ISSUES    			base.TplName = "user/dashboard/issues"
+	PROFILE   			base.TplName = "user/profile"
+	ORG_HOME  			base.TplName = "org/home"
+	NOTIFICATIONS   	base.TplName = "user/notifications"
+	ALLNOTIFICATIONS 	base.TplName = "user/allnotifications"
 )
 
 // getDashboardContextUser finds out dashboard is viewing as which context user.
@@ -411,3 +413,41 @@ func Email2User(ctx *context.Context) {
 	}
 	ctx.Redirect(setting.AppSubUrl + "/user/" + u.Name)
 }
+
+/*USER NOTIFICATIONS*/
+func ShowUnWatchedNotifications(ctx *context.Context) {
+	ctx.Data["Title"] = ctx.Tr("notifications")
+	ctx.Data["PageIsNotifications"] = true
+
+	notifications, err := models.GetUserUnWatchedNotifications(ctx.User.ID)
+	if err != nil {
+		ctx.Handle(500, "GetUserUnWatchedNotifications", err)
+		return
+	}
+
+	count := models.CountUnWatchedUserNotifications(ctx.User.ID)
+
+	ctx.Data["Notifications"] = notifications
+	ctx.Data["Count"] = count
+
+	ctx.HTML(200, NOTIFICATIONS)
+}
+
+func ShowAllNotifications(ctx *context.Context) {
+	ctx.Data["Title"] = ctx.Tr("notifications")
+	ctx.Data["PageIsAllNotifications"] = true
+
+	notifications, err := models.GetUserNotifications(ctx.User.ID)
+	if err != nil {
+		ctx.Handle(500, "GetUserNotifications", err)
+		return
+	}
+
+	count := models.CountUserNotifications(ctx.User.ID)
+
+	ctx.Data["Notifications"] = notifications
+	ctx.Data["Count"] = count
+
+	ctx.HTML(200, ALLNOTIFICATIONS)
+}
+/*USER NOTIFICATIOS*/

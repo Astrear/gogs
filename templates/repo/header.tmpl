@@ -18,6 +18,9 @@
 						<a href="{{AppSubUrl}}/{{.Owner.Name}}">{{.Owner.Name}}</a>
 						<div class="divider"> / </div>
 						<a href="{{$.RepoLink}}">{{.Name}}</a>
+						{{if .IsClosed}}
+							<span class="text gold" title="Repositorio Cerrado"><i class="lock alternate icon"></i></span>
+						{{end}}
 						{{if .IsMirror}}<div class="fork-flag">{{$.i18n.Tr "repo.mirror_from"}} <a target="_blank" href="{{$.Mirror.Address}}">{{$.Mirror.Address}}</a></div>{{end}}
 						{{if .IsFork}}<div class="fork-flag">{{$.i18n.Tr "repo.forked_from"}} <a href="{{.BaseRepo.Link}}">{{SubStr .BaseRepo.RelLink 1 -1}}</a></div>{{end}}
 					</div>
@@ -43,15 +46,28 @@
 						{{if $.IsSigned}}
 							{{if not $.IsOwnerOfRepo}}
 								{{if $.IsCollabOfRepo}}
-									<div class="ui labeled button" tabindex="0">
-										<a class="ui button" href="{{$.RepoLink}}/leave?cUser={{$.SignedUser.ID}}">
-											<i class="octicon octicon-sign-out"></i> {{$.i18n.Tr "repo.dejarcolab"}}
-										</a>
-									</div>
+									<a class="ui button red" href="{{$.RepoLink}}/leave?cUser={{$.SignedUser.ID}}">
+										<i class="octicon octicon-sign-out"></i> {{$.i18n.Tr "repo.dejarcolab"}}
+									</a>
 								{{end}}
 							{{end}}
 						{{end}}
 						<!-- Fin Boton dejar de colaborar-->
+						<!-- Boton Cerrar Repositorio-->
+						{{if $.IsSigned}}
+							{{if $.IsOwnerOfRepo}}
+								{{if .IsClosed}}
+									<a class="ui green icon button" id="btnAbrirRepo" href="{{$.RepoLink}}/open">
+										<i class="unlock icon"></i> {{$.i18n.Tr "repo.openrepo"}}
+									</a>
+								{{else}}
+									<a class="ui red icon button" id="btnCerrarRepo">
+										<i class="lock icon"></i> {{$.i18n.Tr "repo.closerepo"}}
+									</a>
+								{{end}}
+							{{end}}
+						{{end}}
+						<!-- Fin Boton cerrar repo-->
 					</div>
 				</div>
 			</div><!-- end column -->
@@ -80,9 +96,19 @@
 			<a class="{{if .PageIsReleaseList}}active{{end}} item" href="{{.RepoLink}}/releases">
 				<i class="octicon octicon-tag"></i> {{.i18n.Tr "repo.releases"}} <span class="ui {{if not .Repository.NumTags}}gray{{else}}blue{{end}} small label">{{.Repository.NumTags}}</span>
 			</a>
-			<a class="item" href="{{.RepoLink}}/board">
-				<i class="octicon octicon-tasklist"></i> Tareas
-			</a>
+			{{if not .Repository.IsClosed}}
+				{{if $.IsSigned}}
+					{{if $.IsCollabOfRepo}}
+						<a class="{{if .PageIsBoard}}active{{end}} item" href="{{.RepoLink}}/board">
+							<i class="octicon octicon-tasklist"></i> Tareas
+						</a>
+					{{else if $.IsOwnerOfRepo}}
+						<a class="{{if .PageIsBoard}}active{{end}} item" href="{{.RepoLink}}/board">
+							<i class="octicon octicon-tasklist"></i> Tareas
+						</a>
+					{{end}}
+				{{end}}
+			{{end}}
 			{{if .Repository.EnableWiki}}
 				<a class="{{if .PageIsWiki}}active{{end}} item" href="{{.RepoLink}}/wiki">
 					<i class="octicon octicon-book"></i> {{.i18n.Tr "repo.wiki"}}
@@ -93,12 +119,14 @@
 				<i class="octicon octicon-graph"></i> {{.i18n.Tr "repo.contributions"}}
 			</a>
 			{{end}}
-			{{if .IsRepositoryAdmin}}
-				<div class="right menu">
-					<a class="{{if .PageIsSettings}}active{{end}} item" href="{{.RepoLink}}/settings">
-						<i class="octicon octicon-tools"></i> {{.i18n.Tr "repo.settings"}}
-					</a>
-				</div>
+			{{if not .Repository.IsClosed}}
+				{{if .IsRepositoryAdmin}}
+					<div class="right menu">
+						<a class="{{if .PageIsSettings}}active{{end}} item" href="{{.RepoLink}}/settings">
+							<i class="octicon octicon-tools"></i> {{.i18n.Tr "repo.settings"}}
+						</a>
+					</div>
+				{{end}}
 			{{end}}
 		</div>
 	</div>
@@ -107,3 +135,36 @@
 	<div class="ui divider"></div>
 {{end}}
 </div>
+<div class="ui basic modal closeModal">
+	<div class="ui icon header">
+	<i class="lock icon"></i>
+		{{$.i18n.Tr "repo.closerepo"}}
+	</div>
+	<div class="content">
+		<p>{{$.i18n.Tr "repo.closerepomessage"}}</p>
+	</div>
+	<div class="actions">
+		<div class="ui red basic cancel inverted button">
+			<i class="remove icon"></i>
+			No
+		</div>
+		<div class="ui green ok inverted button">
+			<i class="checkmark icon"></i>
+			{{$.i18n.Tr "yes"}}
+		</div>
+	</div>
+</div>
+<script type="text/javascript">
+	var repoLink = "{{$.RepoLink}}";
+	$(document).ready(function($) {
+		$( "#btnCerrarRepo" ).click(function() {
+			$('.closeModal').modal({
+			    closable  : false,
+			    onApprove : function() {
+			      window.location.href = repoLink  + "/close";
+			    }
+			  })
+			  .modal('show');
+		});
+	});
+</script>

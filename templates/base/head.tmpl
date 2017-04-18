@@ -47,11 +47,22 @@
 	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.3.0/Chart.bundle.js"></script>
 	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.3.0/Chart.js"></script>
 
-	<!--SyntaxHighlight-->
+	<!--SyntaxHighlight
+	
 	<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.9.0/styles/default.min.css">
 	<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.9.0/highlight.min.js"></script>
 	<script src="{{AppSubUrl}}/js/code/highlight.pack.js"></script>
-	<!--SyntaxHighlight-->
+	
+	SyntaxHighlight-->
+
+	<style type="text/css">
+		.itemNotification{
+			color: rgba(0,0,0,.87) !important;
+		}
+		.timeSinceNotification{
+			color: rgb(108, 101, 101) !important;
+		}
+	</style>
 
 </head>
 <body>
@@ -65,7 +76,7 @@
 						<div class="column">
 							<div class="ui top secondary menu">
 								<a class="item brand" href="{{AppSubUrl}}/">
-									<img class="ui mini image" src="{{AppSubUrl}}/img/logo.png">
+									<img class="ui tiny image" src="{{AppSubUrl}}/img/headerico.png">
 								</a>
 
 								{{if .IsSigned}}
@@ -148,6 +159,33 @@
 												-->
 											</div><!-- end content create new menu -->
 										</div><!-- end dropdown menu create new -->
+
+										<div id="notifications_user" class="ui dropdown head link jump item poping up" tabindex="-1" data-content="{{.i18n.Tr "notifications"}}" data-variation="tiny inverted" data-id="{{.SignedUser.ID}}">
+											<span class="text avatar">
+												<i class="octicon octicon-bell"></i>
+												<div class="ui small teal label" id="notifications_count" style="display: none;"></div>
+											</span>
+											<script type="text/javascript">
+												$(window).load(function(){
+												    getNotifications()
+												    setInterval(function(){
+												        getNotifications()
+												    }, 60000)
+												});
+											</script>
+											<div class="menu" tabindex="-1" id="menu_notifications">
+												<div class="ui header">
+													{{.i18n.Tr "mynotifications"}}
+												</div>
+												<div class="divider"></div>
+												<div class="item">
+													<a href="{{AppSubUrl}}/notifications">
+														<i class="octicon octicon-history"></i>
+														No tienes nuevas notificationes
+													</a>
+												</div>
+											</div>
+										</div>
 
 										<div class="ui dropdown head link jump item poping up" tabindex="-1" data-content="{{.i18n.Tr "user_profile_and_more"}}" data-variation="tiny inverted">
 											<span class="text avatar">

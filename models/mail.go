@@ -32,8 +32,13 @@ const (
 	MAIL_ISSUE_COMMENT base.TplName = "issue/comment"
 	MAIL_ISSUE_MENTION base.TplName = "issue/mention"
 
-	MAIL_NOTIFY_COLLABORATOR     base.TplName = "notify/collaborator"
-	MAIL_NOTIFY_REG_COLLABORATOR base.TplName = "notify/reg_collaborator"
+	MAIL_NOTIFY_COLLABORATOR     	base.TplName = "notify/collaborator"
+	MAIL_NOTIFY_COLLABORATOR_LEAVE  base.TplName = "notify/collaborator_leave"
+	MAIL_NOTIFY_REG_COLLABORATOR 	base.TplName = "notify/reg_collaborator"
+	MAIL_NOTIFY_CARD_ASIGNED		base.TplName = "notify/card_asigned"
+	MAIL_NOTIFY_CARD_REPLACED		base.TplName = "notify/card_replaced"
+	MAIL_NOTIFY_CARD_DELETED		base.TplName = "notify/card_deleted"
+	MAIL_NOTIFY_CARD_EXPIRED		base.TplName = "notify/card_expired"
 )
 
 type MailRender interface {
@@ -64,7 +69,8 @@ func SendTestMail(email string) error {
 
 func SendUserMail(c *macaron.Context, u *User, tpl base.TplName, code, subject, info string) {
 	data := map[string]interface{}{
-		"Username":          u.DisplayName(),
+		"Name": u.DisplayName(),
+		"UserName" : u.Name,
 		"ActiveCodeLives":   setting.Service.ActiveCodeLives / 60,
 		"ResetPwdCodeLives": setting.Service.ResetPwdCodeLives / 60,
 		"Code":              code,
@@ -92,7 +98,8 @@ func SendResetPasswordMail(c *macaron.Context, u *User) {
 // SendActivateAccountMail sends confirmation email.
 func SendActivateEmailMail(c *macaron.Context, u *User, email *EmailAddress) {
 	data := map[string]interface{}{
-		"Username":        u.DisplayName(),
+		"Name": u.DisplayName(),
+		"UserName" : u.Name,
 		"ActiveCodeLives": setting.Service.ActiveCodeLives / 60,
 		"Code":            u.GenerateEmailActivateCode(email.Email),
 		"Email":           email.Email,
@@ -111,8 +118,11 @@ func SendActivateEmailMail(c *macaron.Context, u *User, email *EmailAddress) {
 
 // SendNotifyAccountMail triggers a notify e-mail when a professor creates an account.
 func SendNotifyAccountMail(c *macaron.Context, u *User) {
+	subject := "GitWolf: Solicitud en proceso."
 	data := map[string]interface{}{
-		"Username": u.DisplayName(),
+		"Subject": subject,
+		"Name": u.DisplayName(),
+		"UserName" : u.Name,
 	}
 	body, err := mailRender.HTMLString(string(MAIL_AUTH_REGISTER_PROFESSOR_NOTIFY), data)
 	if err != nil {
@@ -120,37 +130,43 @@ func SendNotifyAccountMail(c *macaron.Context, u *User) {
 		return
 	}
 
-	msg := mailer.NewMessage([]string{u.Email}, c.Tr("mail.register_professor_notify"), body)
+	msg := mailer.NewMessage([]string{u.Email}, subject, body)
 	msg.Info = fmt.Sprintf("UID: %d, registration notify", u.ID)
 
 	mailer.SendAsync(msg)
 }
 
 func SendApprovedAccountMail(c *macaron.Context, u *User) {
+	subject := "GitWolf: Solicitud  Aceptada."
 	data := map[string]interface{}{
-		"Username": u.DisplayName(),
+		"Subject" : subject,
+		"Name": u.DisplayName(),
+		"UserName" : u.Name,
 	}
 	body, err := mailRender.HTMLString(string(MAIL_AUTH_REGISTER_PROFESSOR_APPROVED), data)
 	if err != nil {
 		log.Error(3, "HTMLString: %v", err)
 		return
 	}
-	msg := mailer.NewMessage([]string{u.Email}, c.Tr("mail.register_professor_notify"), body)
+	msg := mailer.NewMessage([]string{u.Email}, subject, body)
 	msg.Info = fmt.Sprintf("UID: %d, registration notify : Approved", u.ID)
 
 	mailer.SendAsync(msg)
 }
 
 func SendDeniedAccountMail(c *macaron.Context, u *User) {
+	subject := "GitWolf: Solicitud  Denegada."
 	data := map[string]interface{}{
-		"Username": u.DisplayName(),
+		"Subject" : subject,
+		"Name": u.DisplayName(),
+		"UserName" : u.Name,
 	}
 	body, err := mailRender.HTMLString(string(MAIL_AUTH_REGISTER_PROFESSOR_DENIED), data)
 	if err != nil {
 		log.Error(3, "HTMLString: %v", err)
 		return
 	}
-	msg := mailer.NewMessage([]string{u.Email}, c.Tr("mail.register_professor_notify"), body)
+	msg := mailer.NewMessage([]string{u.Email}, subject, body)
 	msg.Info = fmt.Sprintf("UID: %d, registration notify : Denied", u.ID)
 
 	mailer.SendAsync(msg)
@@ -159,7 +175,8 @@ func SendDeniedAccountMail(c *macaron.Context, u *User) {
 // SendRegisterNotifyMail triggers a notify e-mail by admin created a account.
 func SendRegisterNotifyMail(c *macaron.Context, u *User) {
 	data := map[string]interface{}{
-		"Username": u.DisplayName(),
+		"Name": u.DisplayName(),
+		"UserName" : u.Name,
 	}
 	body, err := mailRender.HTMLString(string(MAIL_AUTH_REGISTER_NOTIFY), data)
 	if err != nil {
@@ -176,12 +193,14 @@ func SendRegisterNotifyMail(c *macaron.Context, u *User) {
 // SendCollaboratorMail sends mail notification to new collaborator.
 func SendCollaboratorMail(u, doer *User, repo *Repository) {
 	repoName := path.Join(repo.Owner.Name, repo.Name)
-	subject := fmt.Sprintf("GitWolf: %s te añadio como colaboorador a %s", doer.DisplayName(), repoName)
+	subject := fmt.Sprintf("GitWolf: %s te añadio como colaborador a %s", doer.DisplayName(), repoName)
 
 	data := map[string]interface{}{
 		"Subject":  subject,
-		"RepoName": repoName,
-		"Link":     repo.HTMLURL(),
+		"Name": u.DisplayName(),
+		"UserName" : u.Name,
+		"RepoName" : repoName,
+		"RepoLink": repo.HTMLURL(),
 	}
 	body, err := mailRender.HTMLString(string(MAIL_NOTIFY_COLLABORATOR), data)
 	if err != nil {
@@ -195,9 +214,33 @@ func SendCollaboratorMail(u, doer *User, repo *Repository) {
 	mailer.SendAsync(msg)
 }
 
+// SendCollaboratorMail sends mail notification to new collaborator.
+func SendCollaboratorLeaveMail(u, doer *User, repo *Repository) {
+	repoName := path.Join(repo.Owner.Name, repo.Name)
+	subject := fmt.Sprintf("GitWolf: %s(%s) ha abandonado el proyecto %s", u.DisplayName(),u.Name, repoName)
+
+	data := map[string]interface{}{
+		"Subject":  subject,
+		"Name": u.DisplayName(),
+		"UserName" : u.Name,
+		"RepoName" : repoName,
+		"RepoLink": repo.HTMLURL(),
+	}
+	body, err := mailRender.HTMLString(string(MAIL_NOTIFY_COLLABORATOR_LEAVE), data)
+	if err != nil {
+		log.Error(3, "HTMLString: %v", err)
+		return
+	}
+
+	msg := mailer.NewMessage([]string{doer.Email}, subject, body)
+	//msg.Info = fmt.Sprintf("UID: %d, add collaborator", u.ID)
+
+	mailer.SendAsync(msg)
+}
+
 func SendRegisterInvitationCollab(email string, doer *User, repo *Repository) {
 	repoName := path.Join(repo.Owner.Name, repo.Name)
-	subject := fmt.Sprintf("GitWolf: %s te añadio como colaboorador a %s", doer.DisplayName(), repoName)
+	subject := fmt.Sprintf("GitWolf: %s te añadio como colaborador a %s", doer.DisplayName(), repoName)
 
 	data := map[string]interface{}{
 		"Subject":  subject,
@@ -253,4 +296,112 @@ func SendIssueMentionMail(issue *Issue, doer *User, tos []string) {
 		return
 	}
 	mailer.SendAsync(composeIssueMessage(issue, doer, MAIL_ISSUE_MENTION, tos, "issue mention"))
+}
+
+//*****NOTIFY BOARD ACTIONS*****
+func SendEmailCardAsigned(userID int64, repoName string, repoLink string, cardDescription string){
+	u, err := GetUserByID(userID)
+	if err != nil{
+		log.Error(3, "SendEmailCardAsigned: GetUserByID: %v", err)
+		return
+	}
+
+	subject := fmt.Sprintf("GitWolf: %s te han agregado como responsable de una tarjeta", u.Name)
+
+	data := map[string]interface{}{
+		"Subject":  subject,
+		"Name": u.DisplayName(),
+		"UserName" : u.Name,
+		"RepoName" : repoName,
+		"RepoLink": repoLink,
+		"CardDescription": cardDescription,
+	}
+	body, err := mailRender.HTMLString(string(MAIL_NOTIFY_CARD_ASIGNED), data)
+	if err != nil {
+		log.Error(3, "HTMLString: %v", err)
+		return
+	}
+	msg := mailer.NewMessage([]string{u.Email}, subject, body)
+	mailer.SendAsync(msg)
+}
+
+func SendEmailCardReplaced(userID int64, repoName string, repoLink string, cardDescription string){
+	u, err := GetUserByID(userID)
+	if err != nil{
+		log.Error(3, "SendEmailCardReplaced: GetUserByID: %v", err)
+		return
+	}
+
+	subject := fmt.Sprintf("GitWolf: %s te han reemplazado como responsable de una tarjeta", u.Name)
+
+	data := map[string]interface{}{
+		"Subject":  subject,
+		"Name": u.DisplayName(),
+		"UserName" : u.Name,
+		"RepoName" : repoName,
+		"RepoLink": repoLink,
+		"CardDescription": cardDescription,
+	}
+	body, err := mailRender.HTMLString(string(MAIL_NOTIFY_CARD_REPLACED), data)
+	if err != nil {
+		log.Error(3, "HTMLString: %v", err)
+		return
+	}
+
+	msg := mailer.NewMessage([]string{u.Email}, subject, body)
+	mailer.SendAsync(msg)
+}
+
+func SendEmailCardDeleted(userID int64, repoName string, repoLink string, cardDescription string){
+	u, err := GetUserByID(userID)
+	if err != nil{
+		log.Error(3, "SendEmailCardDeleted: GetUserByID: %v", err)
+		return
+	}
+
+	subject := fmt.Sprintf("GitWolf: %s Se ha eliminado una de tus tarjetas", u.Name)
+
+	data := map[string]interface{}{
+		"Subject":  subject,
+		"Name": u.DisplayName(),
+		"UserName" : u.Name,
+		"RepoName" : repoName,
+		"RepoLink": repoLink,
+		"CardDescription": cardDescription,
+	}
+	body, err := mailRender.HTMLString(string(MAIL_NOTIFY_CARD_DELETED), data)
+	if err != nil {
+		log.Error(3, "HTMLString: %v", err)
+		return
+	}
+
+	msg := mailer.NewMessage([]string{u.Email}, subject, body)
+	mailer.SendAsync(msg)
+}
+
+func SendEmailCardExpired(userID int64, repoName string, repoLink string, cardDescription string){
+	u, err := GetUserByID(userID)
+	if err != nil{
+		log.Error(3, "SendEmailCardExpired: GetUserByID: %v", err)
+		return
+	}
+
+	subject := fmt.Sprintf("GitWolf: %s Ha expirado una de tus tarjetas", u.Name)
+
+	data := map[string]interface{}{
+		"Subject":  subject,
+		"Name": u.DisplayName(),
+		"UserName" : u.Name,
+		"RepoName" : repoName,
+		"RepoLink": repoLink,
+		"CardDescription": cardDescription,
+	}
+	body, err := mailRender.HTMLString(string(MAIL_NOTIFY_CARD_EXPIRED), data)
+	if err != nil {
+		log.Error(3, "HTMLString: %v", err)
+		return
+	}
+
+	msg := mailer.NewMessage([]string{u.Email}, subject, body)
+	mailer.SendAsync(msg)
 }

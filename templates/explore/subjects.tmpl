@@ -5,14 +5,17 @@
 			{{template "explore/navbar" .}}
 			<div class="twelve wide column content">
 				{{template "explore/search" .}}
-				<div class="ui subject list">
+				<div class="ui middle aligned divided list">
 					{{range .Subjects}}
-						<div class="item">
-						  <img class="ui avatar image" src="{{AppSubUrl}}/img/subject.png">
-						  <div class="content">
-						  	<span class="header" style="margin-top: 3%;"><a href="/explore/repos?q={{.Name}}">{{.Name}}</a></span>
-						  </div>
+					<div class="item">
+						<div  class="right floated content">
+							<a href="/explore/repos?q={{.Name}}" class="ui button">Explorar</a>
 						</div>
+						<img class="ui avatar image" src="{{AppSubUrl}}/img/subject.png">
+						<div class="content">
+							{{.Name}}
+						</div>
+					</div>
 					{{end}}
 				</div>
 				{{template "explore/page" .}}

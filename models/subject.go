@@ -110,7 +110,7 @@ func CountSubjects() int64 {
 // Subjects returns number of subjects in given page.
 func Subjects(page, pageSize int) ([]*Subject, error) {
 	subjects := make([]*Subject, 0, pageSize)
-	return subjects, x.Limit(pageSize, (page-1)*pageSize).Where("id > 0").Asc("id").Find(&subjects)
+	return subjects, x.Limit(pageSize, (page-1)*pageSize).Where("id > 0").Asc("name").Find(&subjects)
 }
 
 func getSubjects() ([]*Subject, error) {
@@ -257,7 +257,7 @@ func SearchSubjectByName(opts *SearchSubjectOptions) (subjects []*Subject, _ int
 	searchQuery := "%" + opts.Keyword + "%"
 	subjects = make([]*Subject, 0, opts.PageSize)
 	// Append conditions
-	sess := x.Where("name LIKE ?", searchQuery)
+	sess := x.Where("name LIKE ?", searchQuery).Asc("name")
 
 	var countSess xorm.Session
 	countSess = *sess

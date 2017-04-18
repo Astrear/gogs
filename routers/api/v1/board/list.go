@@ -37,7 +37,7 @@ func CreateList(ctx *context.APIContext, form api.CreateListOption) {
 }
 
 func EditList(ctx *context.APIContext, form api.EditListOption) {
-	list, err := models.GetListByIndex(ctx.Repo.Repository.ID, ctx.ParamsInt64(":id"))
+	list, err := models.GetListByRepoID(ctx.Repo.Repository.ID, ctx.ParamsInt64(":id"))
 	if err != nil {
 		if models.IsErrListNotExist(err) {
 			ctx.Status(404)
@@ -48,11 +48,15 @@ func EditList(ctx *context.APIContext, form api.EditListOption) {
 	}
 
 	if len(form.Title) > 0 {
-		list.Title = form.Title
+		if list.Title != form.Title{
+			list.Title = form.Title
+		}
 	}
 
 	if form.Index >= 0 {
-		list.Position = form.Index
+		if list.Position != form.Index{
+			list.Position = form.Index
+		}	
 	}
 
 	if err := models.UpdateList(ctx.Repo.Repository, list); err != nil {
@@ -64,7 +68,7 @@ func EditList(ctx *context.APIContext, form api.EditListOption) {
 }
 
 func DeleteList(ctx *context.APIContext) {
-	if err := models.DeleteListByRepoID(ctx.Repo.Repository.ID, ctx.ParamsInt64(":index")); err != nil {
+	if err := models.DeleteListByRepoID(ctx.Repo.Repository.ID, ctx.ParamsInt64(":id")); err != nil {
 		ctx.Error(500, "DeleteListByRepoID", err)
 		return
 	}

@@ -14,7 +14,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/jaytaylor/html2text"
+	//"github.com/jaytaylor/html2text"
 	"gopkg.in/gomail.v2"
 
 	"github.com/gogits/gogs/modules/log"
@@ -36,7 +36,11 @@ func NewMessageFrom(to []string, from, subject, htmlBody string) *Message {
 	msg.SetHeader("Subject", subject)
 	msg.SetDateHeader("Date", time.Now())
 
-	body, err := html2text.FromString(htmlBody)
+	msg.SetBody("text/html", htmlBody)
+	if setting.MailService.EnableHTMLAlternative {
+		msg.AddAlternative("text/html", htmlBody)
+	}
+	/*body, err := html2text.FromString(htmlBody)
 	if err != nil {
 		log.Error(4, "html2text.FromString: %v", err)
 		msg.SetBody("text/html", htmlBody)
@@ -45,7 +49,7 @@ func NewMessageFrom(to []string, from, subject, htmlBody string) *Message {
 		if setting.MailService.EnableHTMLAlternative {
 			msg.AddAlternative("text/html", htmlBody)
 		}
-	}
+	}*/
 
 	return &Message{
 		Message: msg,

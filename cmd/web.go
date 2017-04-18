@@ -239,6 +239,13 @@ func runWeb(ctx *cli.Context) error {
 		m.Post("/reset_password", user.ResetPasswdPost)
 	}, reqSignOut)
 
+	m.Group("/notifications", func() {
+		m.Get("", user.ShowUnWatchedNotifications)
+		m.Get("/all", user.ShowAllNotifications)
+	},  reqSignIn, func(ctx *context.Context) {
+		ctx.Data["PageIsUserNotifications"] = true
+	})
+
 	m.Group("/user/settings", func() {
 		m.Get("", user.Settings)
 		m.Post("", bindIgnErr(auth.UpdateProfileForm{}), user.SettingsPost)
@@ -492,6 +499,12 @@ func runWeb(ctx *cli.Context) error {
 	m.Group("/:username/:reponame", func() {
 		m.Group("/leave", func() {
 			m.Combo("").Get(repo.LeaveRepo)
+			})
+		m.Group("/close", func() {
+			m.Combo("").Get(repo.CloseRepo)
+			})
+		m.Group("/open", func() {
+			m.Combo("").Get(repo.OpenRepo)
 			})
 		m.Group("/settings", func() {
 			m.Combo("").Get(repo.Settings).

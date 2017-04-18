@@ -426,7 +426,7 @@ func CoursePost(ctx *context.Context, form auth.AdminCrateSubjectForm) {
 }
 
 func ChangeCourseStatus(ctx *context.Context) {
-	if err := ctx.User.ChangeCourseStatus(
+	if err := models.ChangeCourseStatus(
 		ctx.QueryInt64("sid"),
 		ctx.QueryInt("status")); err != nil {
 		log.Error(4, "ChangeCourseStatus: %v", err)

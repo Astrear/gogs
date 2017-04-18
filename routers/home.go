@@ -180,7 +180,7 @@ func RenderAdvancedRepoSearch(ctx *context.Context, opts *RepoSearchOptions) {
 }
 
 func AdvancedSearch(ctx *context.Context) {
-	ctx.Data["Title"] = ctx.Tr("advanced")
+	ctx.Data["Title"] = ctx.Tr("explore.advanced")
 	ctx.Data["PageIsExplore"] = true
 	ctx.Data["PageIsExploreAdvanced"] = true
 
@@ -296,7 +296,7 @@ func ExploreProfessors(ctx *context.Context) {
 		Counter:  models.CountProfessors,
 		Ranger:   models.Professors,
 		PageSize: setting.UI.ExplorePagingNum,
-		OrderBy:  "updated_unix DESC",
+		OrderBy:  "full_name ASC",
 		TplName:  EXPLORE_PROFESSORS,
 	})
 }

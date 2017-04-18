@@ -5,12 +5,28 @@
 	}
 </style>
 <div class="ui repository list">
+	<div class="ui centered grid">
+		<div class="row">
+			<div class="ui info icon message">
+			  <i class="bar chart icon"></i>
+			  <div class="content">
+			    <div class="header">
+			      Lista de los 25 repositorios con mas puntuación en el sistema
+			    </div>
+			  </div>
+			</div>
+		</div>
+	</div>
 	{{range .Repos}}
 		<div class="ui fluid card">
 			<div class="content">
-				<div class="ui right metas">
+				<div class="right floated">
+					<div class="ui label">
+						<img class="ui avatar image" src="{{AppSubUrl}}/img/Award.png">
+						<span class="rating">{{.GetHTMLAverageRepo}}</span>
+					</div>
 					<span class="text grey"><i class="octicon octicon-star"></i> {{.NumStars}}</span>
-				</div>
+			    </div>
 				<div class="header">
 					<a class="name" href="{{AppSubUrl}}/{{if .Owner}}{{.Owner.Name}}{{else if $.Org}}{{$.Org.Name}}{{else}}{{$.Owner.Name}}{{end}}/{{.Name}}">{{if $.PageIsExplore}}{{.Owner.Name}} / {{end}}{{.Name}}</a>
 					{{if .IsPrivate}}
@@ -22,74 +38,68 @@
 					{{end}}
 				</div>
 				<div class="meta">
-					{{$.i18n.Tr "org.repo_updated"}} {{TimeSince .Updated $.i18n.Lang}}
+					<div class="ui small breadcrumb">
+						{{if .SemesterID}}
+						<a class="section" href="/explore/repos?q={{.GetSemesterName}}">{{.GetSemesterName}}</a>
+						{{end}}
+
+						{{if .GroupID}}
+						<i class="right chevron icon divider"></i>
+						<a class="section" href="/explore/repos?q={{.GetGroupName}}">{{.GetGroupName}}</a>
+						{{end}}
+
+						{{if .SubjectID}}
+						<i class="right chevron icon divider"></i>
+						<a class="section" href="/explore/repos?q={{.GetSubjectName}}">{{.GetSubjectName}}</a>
+						{{end}}
+
+						{{if .ProfessorID}}
+						<i class="right chevron icon divider"></i>
+						<a class="section" href="/explore/repos?q={{.GetProfessorName}}">{{.GetProfessorName}}</a>
+						{{end}}
+					</div>
+					<p style="font-size: 11px;">{{$.i18n.Tr "org.repo_updated"}} {{TimeSince .Updated $.i18n.Lang}}</p>
 				</div>
 				<div class="description">
-					{{if .DescriptionHtml}}<p class="has-emoji">{{.DescriptionHtml}}</p>{{end}}
-					{{if .SemesterID}}
-					<a class="ui image label" href="/explore/repos?q={{.GetSemesterName}}">
-					  <i class="calendar icon"></i>
-					  Semestre
-					  <div class="detail">{{.GetSemesterName}}</div>
-					</a>
-					{{end}}
-
-					{{if .GroupID}}
-					<a class="ui image label" href="/explore/repos?q={{.GetGroupName}}">
-					  <i class="users icon"></i>
-					  Grupo
-					  <div class="detail">{{.GetGroupName}}</div>
-					</a>
-					{{end}}
-
-					{{if .SubjectID}}
-					<a class="ui image label" href="/explore/repos?q={{.GetSubjectName}}">
-					  <i class="book icon"></i>
-					  Materia
-					  <div class="detail">{{.GetSubjectName}}</div>
-					</a>
-					{{end}}
-					<br>
-					{{if .GetTags}}
-						<div class="ui horizontal list" style="">
-						{{range .GetTags}}
-							<div class="item" style="padding-bottom: 0;">
-								<a class="ui tiny label" href="/explore/repos?q={{.Etiqueta}}">
-								  <i class="tag icon"></i>
-								  {{.Etiqueta}}
-								</a>
-							</div>
-						{{end}}
-						</div>
-					{{end}}
+					{{if .DescriptionHtml}}<p class="has-emoji">{{.DescriptionHtml}}</p>{{end}}					
 				</div>
 			</div>
+			{{if .GetTags}}
 			<div class="extra content">
-				<div class="ui label calificacion" title="Calificación del Repositorio"><i class="icon"><img height="12" width="12" src="http://www.myiconfinder.com/uploads/iconsets/128-128-aab630a4fbcd8b3718c4dd5f301fd060-trophy.png"></i><span class="spanCalf" style="position: relative; top: -2px">{{.GetHTMLAverageRepo}}</span>
+				<div class="ui horizontal list" style="">
+				{{range .GetTags}}
+					<div class="item" style="padding-bottom: 0;">
+						<a class="ui tiny label" href="/explore/repos?q={{.Etiqueta}}">
+						  <i class="tag icon"></i>
+						  {{.Etiqueta}}
+						</a>
+					</div>
+				{{end}}
 				</div>
 			</div>
+			{{end}}
 		</div>
 		
 		<script>
-			$( ".spanCalf" ).each(function() {
-				var calf = parseFloat($( this ).html());
+			$( ".rating" ).each(function() {
+				var calf = parseFloat($(this).html());
 				if (calf == 0){
 					$(this).html("Sin calificación");
 				}
 				if (calf > 0 && calf <= 3){
-					$(this).html(calf + ' - Muy Malo');
+					//$(this).html(calf + ' - Muy Malo');
 					$(this).parent().addClass("red");
 				} else if(calf > 3 && calf <= 5){
-					$(this).html(calf + ' - Malo');
+					//$(this).html(calf + ' - Malo');
 					$(this).parent().addClass("orange");
 				} else if(calf > 5 && calf <= 7){
-					$(this).html(calf + ' - Regular');
+					//$(this).html(calf + ' - Regular');
 					$(this).parent().addClass("yellow");
 				} else if(calf > 7 && calf <= 9){
-					$(this).html(calf + ' - Bueno');
+					//$(this).html(calf + ' - Bueno');
 					$(this).parent().addClass("green");
 				} else if(calf > 9 && calf <= 10){
-					$(this).html(calf + ' - Excelente');
+					//$(this).html(calf + ' - Excelente');
 					$(this).parent().addClass("blue");
 				} 
 			});

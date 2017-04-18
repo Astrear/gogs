@@ -31,6 +31,9 @@ func NewFuncMap() []template.FuncMap {
 		"GoVer": func() string {
 			return strings.Title(runtime.Version())
 		},
+		"TimeSinceNotification": func(timeN int64, lang string) string {
+			return models.TimeSinceNotification(timeN, lang)
+		},
 		"UseHTTPS": func() bool {
 			return strings.HasPrefix(setting.AppUrl, "https")
 		},

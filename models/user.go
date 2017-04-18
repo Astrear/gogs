@@ -1075,7 +1075,7 @@ func SearchUserByName(opts *SearchUserOptions) (users []*User, _ int64, _ error)
 	sess := x.Where("LOWER(lower_name) LIKE ?", searchQuery).
 		Or("LOWER(full_name) LIKE ?", searchQuery).
 		Or("email LIKE ?", searchQuery).
-		And("type = ?", opts.Type)
+		And("type = ?", opts.Type).OrderBy("full_name asc")
 
 	var countSess xorm.Session
 	countSess = *sess
@@ -1101,7 +1101,7 @@ func SearchTopUsers(opts *SearchTopUsersOptions) (users []*User, _ int64, _ erro
 
 	users = make([]*User, 0, opts.PageSize)
 	// Append conditions
-	sess := x.Where("type = ?", opts.Type).OrderBy("puntos DESC")
+	sess := x.Where("type = ?", opts.Type).OrderBy("puntos DESC").Limit(25,0)
 
 	var countSess xorm.Session
 	countSess = *sess

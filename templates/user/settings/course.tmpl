@@ -51,7 +51,7 @@
 								<div class="ui inline dropdown">
 								  <div class="text">{{if .Course.IsActive}}Activo{{else}}Inactivo{{end}}</div>
 								  <i class="dropdown icon"></i>
-								  <div class="access-mode menu" data-url="{{$.Link}}/status" data-sid="{{.Subject.ID}}">
+								  <div class="access-mode menu" data-url="{{$.Link}}/status" data-sid="{{.Course.ID}}">
 								    <div class="item" data-text="{{$.i18n.Tr "user.settings.course.active"}}" data-value="1">{{$.i18n.Tr "user.settings.course.active"}}</div>
 								    <div class="item" data-text="{{$.i18n.Tr "user.settings.course.inactive"}}" data-value="0">{{$.i18n.Tr "user.settings.course.inactive"}}</div>
 								  </div>

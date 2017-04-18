@@ -240,7 +240,7 @@ func SearchGroupByName(opts *SearchGroupOptions) (groups []*Group, _ int64, _ er
 	searchQuery := "%" + opts.Keyword + "%"
 	groups = make([]*Group, 0, opts.PageSize)
 	// Append conditions
-	sess := x.Where("name LIKE ?", searchQuery)
+	sess := x.Where("name LIKE ?", searchQuery).Asc("name")
 
 	var countSess xorm.Session
 	countSess = *sess

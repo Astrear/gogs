@@ -1,3 +1,33 @@
+@font-face {
+    font-family: Bebas;
+    src: url("../fonts/Bebas.ttf");
+}
+
+@font-face {
+    font-family: Code;
+    src: url("../fonts/Code.otf");
+}
+
+@font-face {
+    font-family: Infinity;
+    src: url("../fonts/Infinity.ttf");
+}
+
+@font-face {
+    font-family: Mohave;
+    src: url("../fonts/Mohave.otf");
+}
+
+.ui.icon.header.title{
+  font-family: Bebas;
+  color: #484848;
+}
+
+.home .hero h2{
+  font-family: Infinity !important;
+  color: #484848;
+}
+
 .emoji {
   width: 1.5em;
   height: 1.5em;
@@ -848,7 +878,7 @@ footer .ui.language .menu {
   padding-bottom: 80px;
 }
 .home .logo {
-  max-width: 220px;
+  max-width: 450px;
 }
 .home .hero h1,
 .home .hero h2 {

@@ -25,6 +25,7 @@ import (
 	"github.com/gogits/gogs/routers/api/v1/course"
 	"github.com/gogits/gogs/routers/api/v1/subject"
 	"github.com/gogits/gogs/routers/api/v1/user"
+	"github.com/gogits/gogs/routers/api/v1/notification"
 )
 
 func repoAssignment() macaron.Handler {
@@ -191,6 +192,11 @@ func RegisterRoutes(m *macaron.Macaron) {
 			m.Get("/repo", repo.EvaluateRepo)
 		})
 
+		m.Group("/notifications", func() {
+			m.Get("/get", notification.GetUserNotifications)
+			m.Get("/update", notification.UpdateWatchNotifications)
+		})
+
 		// Users
 		m.Group("/users", func() {
 			m.Get("/search", user.Search)
@@ -274,17 +280,22 @@ func RegisterRoutes(m *macaron.Macaron) {
 		
 		m.Group("/:username/:reponame", func() {
 			m.Group("/board", func() {
-				m.Group("/list", func(){
+				m.Group("/list", func() {
 					m.Combo("").Post(reqRepoWriter(), bind(api.CreateListOption{}), board.CreateList)
-					m.Combo("/:id").Get(repo.GetMilestone).
-						Patch(reqRepoWriter(), bind(api.EditListOption{}), board.EditList).
+					m.Combo("/:id").Patch(reqRepoWriter(), bind(api.EditListOption{}), board.EditList).
 						Delete(reqRepoWriter(), board.DeleteList)
 				})
-				m.Group("/card", func(){
-					m.Combo("").Post(reqRepoWriter(), bind(api.CreateCardOption{}), board.CreateCard)
-					m.Combo("/:list/:id").Get(repo.GetMilestone).
-						Patch(reqRepoWriter(), bind(api.EditCardOption{}), board.EditCard).
-						Delete(reqRepoWriter(), board.DeleteCard)
+				m.Group("/card", func() {
+					m.Combo("").Post(bind(api.CreateCardOption{}), board.CreateCard)
+					m.Combo("/:id").Patch(bind(api.EditCardOption{}), board.EditCard).
+					Delete(board.DeleteCard)
+					m.Post("/duration/:id", reqRepoWriter(), bind(api.EditCardDurationOption{}), board.EditCardDuration)
+					m.Post("/state/:id", reqRepoWriter(), board.EditCardState)
+					m.Post("/expire/:id", board.ExpireCard)
+					m.Group("/move", func(){
+						m.Combo("/:id").Patch(reqRepoWriter(), bind(api.EditCardIndexOption{}), board.EditCardIndex).
+						Post(reqRepoWriter(), bind(api.TransferCardOption{}), board.TransferCard)
+					})
 				})
 				
 			})

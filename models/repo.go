@@ -184,6 +184,9 @@ type Repository struct {
 
 	IsPrivate bool
 	IsBare    bool
+	//CLOSE REPO
+	IsClosed  bool `xorm:"NOT NULL DEFAULT false"`
+	//CLOSE REPO
 
 	IsMirror bool
 	*Mirror  `xorm:"-"`
@@ -1643,9 +1646,9 @@ func SearchTopRepositories(opts *TopRepoSearchOptions) (repos []*Repository, _ i
 	repos = make([]*Repository, 0, opts.PageSize)
 
 	// Append conditions
-	sess := x.Cols("repository.id,repository.name, repository.owner_id, repository.description, repository.is_mirror, repository.is_private, repository.updated_unix, repository.num_stars,repository.semester_id,repository.group_id,repository.subject_id").
+	sess := x.Cols("repository.id,is_closed,repository.name, repository.owner_id, repository.description, repository.is_mirror, repository.is_private, repository.updated_unix, repository.num_stars,repository.semester_id,repository.group_id,repository.subject_id").
 		Join("INNER", "calificacion_repo", "repository.id = calificacion_repo.repo_id").
-		GroupBy("repository.id").OrderBy("(ROUND( AVG(calificacion_repo.calificacion),1 )) DESC")
+		GroupBy("repository.id").OrderBy("(ROUND( AVG(calificacion_repo.calificacion),1 )) DESC").Limit(25,0)
 
 
 	if opts.OwnerID > 0 {
@@ -1680,7 +1683,7 @@ func SearchRepositoryByName(opts *SearchRepoOptions) (repos []*Repository, _ int
 	repos = make([]*Repository, 0, opts.PageSize)
 
 	// Append conditions
-	sess := x.Cols("repository.id","repository.name, repository.owner_id, repository.description, repository.is_mirror, repository.is_private, repository.updated_unix, repository.num_stars,repository.semester_id,repository.group_id,repository.subject_id").
+	sess := x.Cols("repository.id","is_closed, repository.name, repository.owner_id, repository.description, repository.is_mirror, repository.is_private, repository.updated_unix, repository.num_stars,repository.semester_id,repository.group_id,repository.subject_id").
 		Join("INNER", "semester", "repository.semester_id = semester.id").
 		Join("INNER", "user", "repository.professor_id = user.id").
 		Join("INNER", "subject", "repository.subject_id = subject.id").
@@ -1728,7 +1731,7 @@ func AdvancedSearchRepositoryByName(opts *AdvancedSearchRepoOptions) (repos []*R
 
 	// Append conditions
 	
-	sess := x.Cols("repository.name, repository.owner_id, repository.description, repository.is_mirror, repository.is_private, repository.updated_unix, repository.num_stars")
+	sess := x.Cols("repository.id, is_closed, repository.name, repository.owner_id, repository.description, repository.is_mirror, repository.is_private, repository.updated_unix, repository.num_stars")
 
 	//.Cols("repository.name, repository.owner_id, repository.description, repository.is_mirror, repository.is_private, repository.updated_unix, repository.num_stars")
 
@@ -2561,4 +2564,17 @@ func SubtractPointsUser(userID int64, puntos int)(error){
 	_, err := x.Exec("UPDATE `user` SET puntos = puntos - ? WHERE id = ?", puntos , userID)
 
 	return err
+}
+
+//FUNCTIONS TO CLOSE REPOSITORY
+func (r *Repository) CloseRepoUpdate()(error){
+	_, err := x.Exec("UPDATE `repository` SET is_closed = 1 WHERE id = ?", r.ID)
+
+	return err	
+}
+
+func (r *Repository) OpenRepoUpdate()(error){
+	_, err := x.Exec("UPDATE `repository` SET is_closed = 0 WHERE id = ?", r.ID)
+
+	return err	
 }

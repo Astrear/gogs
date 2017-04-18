@@ -15,18 +15,13 @@ import (
 
 // List represents a git repository.
 type List struct {
-	ID            int64  `xorm:"pk autoincr"`
-	RepoID        int64  `xorm:"UNIQUE(s)"`
-	Title         string `xorm:"UNIQUE(s) INDEX NOT NULL"`
-	Position	  int64  `xorm:"UNIQUE(s)"`
+	ID            int64   `xorm:"pk autoincr"`
+	RepoID        int64   `xorm:"UNIQUE(s)"`
+	Title         string  `xorm:"UNIQUE(s) INDEX NOT NULL"`
+	Position	  int     `xorm:"UNIQUE(s)"`
 
 	Cards         []*Card `xorm:"-"`
-	NumCards 	  int `xorm:"DEFAULT 0"`
-
-	Created       time.Time `xorm:"-"`
-	CreatedUnix   int64
-	Updated       time.Time `xorm:"-"`
-	UpdatedUnix   int64
+	NumCards 	  int 	  `xorm:"DEFAULT 0"`
 }
 
 func (list *List) APIFormat() *api.List {
@@ -36,24 +31,6 @@ func (list *List) APIFormat() *api.List {
 		Index:   list.Position,
 	}
 	return apiList
-}
-
-func (list *List) BeforeInsert() {
-	list.CreatedUnix = time.Now().Unix()
-	list.UpdatedUnix = list.CreatedUnix
-}
-
-func (list *List) BeforeUpdate() {
-	list.UpdatedUnix = time.Now().Unix()
-}
-
-func (list *List) AfterSet(colName string, _ xorm.Cell) {
-	switch colName {
-		case "created_unix":
-			list.Created = time.Unix(list.CreatedUnix, 0).Local()
-		case "updated_unix":
-			list.Updated = time.Unix(list.UpdatedUnix, 0)
-	}
 }
 
 func countRepoLists(e Engine, repoID int64) int64 {
@@ -138,21 +115,18 @@ func NewList(repo *Repository, list *List) (err error) {
 
 
 func (repo *Repository) getLists(e Engine) (_ []*List, err error) {
-	rawLists := make([]*List, 0, repo.NumLists)
 	lists := make([]*List, 0, repo.NumLists)
 	if repo.NumLists> 0 {
-		if err = e.Where("repo_id = ?", repo.ID).OrderBy("position").Find(&rawLists); err != nil {
+		if err = e.Where("repo_id = ?", repo.ID).OrderBy("position").Find(&lists); err != nil {
 			return nil, err
 		}
-		for _, raw := range rawLists {
-			if list, err := GetListByID(raw.ID); err != nil {
+
+		for _, list := range lists {
+			if err := list.LoadCards(); err != nil {
 				return make([]*List, 0, 0), err
-			} else {
-				lists = append(lists, list)
 			}
 		}
 	}
-
 	return lists, nil
 }
 
@@ -160,24 +134,59 @@ func (repo *Repository) GetLists() (_ []*List, err error) {
 	return repo.getLists(x)
 }
 
-func getListByRepoID(e Engine, id int64, repoID int64) (*List, error) {
+// GetIssueByIndex returns raw issue without loading attributes by index in a repository.
+func GetRawListByID(e Engine, id int64) (*List, error) {
+	list := new(List)
+	has, err := e.Id(id).Get(list)
+	if err != nil {
+		return nil, err
+	} else if !has {
+		return nil, ErrListNotExist{0, 0, id}
+	}
+	return list, nil
+}
+
+func getListByID(e Engine, id int64) (*List, error) {
+	list, err := GetRawListByID(e, id)
+	if err != nil {
+		return nil, err
+	}
+	return list, list.LoadCards()
+}
+
+// GetIssueByID returns an issue by given ID.
+func GetListByID(id int64) (*List, error) {
+	return getListByID(x, id)
+}
+
+// GetIssueByIndex returns raw issue without loading attributes by index in a repository.
+func GetRawListByRepoID(e Engine, repoID, id int64) (*List, error) {
 	list := &List{
-		ID 		:id,	
-		RepoID	:repoID,
+		ID 		: id,
+		RepoID 	: repoID,
 	}
 	has, err := e.Get(list)
 	if err != nil {
 		return nil, err
 	} else if !has {
-		return nil, ErrRepoNotExist{0, repoID, ""}
+		return nil, ErrListNotExist{0, repoID, id}
 	}
-	return list, err
+	return list, nil
+}
+
+func getListByRepoID(e Engine, repoID, id int64) (*List, error) {
+	list, err := GetRawListByRepoID(e, repoID, id)
+	if err != nil {
+		return nil, err
+	}
+	return list, list.LoadCards()
 }
 
 // GetRepositoryByID returns the repository by given id if exists.
-func GetListByRepoID(id int64, repoID int64) (*List, error) {
-	return getListByRepoID(x, id, repoID)
+func GetListByRepoID(repoID, id int64) (*List, error) {
+	return getListByRepoID(x, repoID, id)
 }
+
 
 func updateList(e Engine, repo *Repository, list *List) error {
 	_, err := e.Id(list.ID).AllCols().Update(list)
@@ -189,68 +198,9 @@ func UpdateList(repo *Repository, list *List) error {
 	return updateList(x, repo, list)
 }
 
-func getListByID(e Engine, id int64) (*List, error) {
-	list := new(List)
-	has, err := e.Id(id).Get(list)
-	if err != nil {
-		return nil, err
-	} else if !has {
-		return nil, ErrListNotExist{id, 0, 0}
-	}
-	return list, list.LoadCards()
-}
-
-// GetIssueByID returns an issue by given ID.
-func GetListByID(id int64) (*List, error) {
-	return getListByID(x, id)
-}
-
-// GetIssueByIndex returns raw issue without loading attributes by index in a repository.
-func GetRawListByIndex(repoID, index int64) (*List, error) {
-	list := &List{
-		RepoID: 	repoID,
-		Position:   index,
-	}
-	has, err := x.Get(list)
-	if err != nil {
-		return nil, err
-	} else if !has {
-		return nil, ErrListNotExist{0, repoID, index}
-	}
-	return list, nil
-}
-
-// GetIssueByIndex returns raw issue without loading attributes by index in a repository.
-func GetRawListByID(listID int64) (*List, error) {
-	list := &List{
-		ID: listID,
-	}
-	has, err := x.Get(list)
-	if err != nil {
-		return nil, err
-	} else if !has {
-		return nil, ErrListNotExist{0, 0, listID}
-	}
-	return list, nil
-}
-
-// GetIssueByIndex returns issue by index in a repository.
-func getListByIndex(e Engine, repoID, ListIndex int64) (*List, error) {
-	list, err := GetRawListByIndex(repoID, ListIndex)
-	if err != nil {
-		return nil, err
-	}
-	return list, list.LoadCards()
-}
-
-// GetIssueByID returns an issue by given ID.
-func GetListByIndex(repoID, ListIndex int64) (*List, error) {
-	return getListByIndex(x, repoID, ListIndex)
-}
-
 // DeleteMilestoneByRepoID deletes a milestone from a repository.
-func DeleteListByRepoID(repoID, ListIndex int64) error {
-	list, err := GetListByIndex(repoID, ListIndex)
+func DeleteListByRepoID(repoID, id int64) error {
+	list, err := GetListByRepoID(repoID, id)
 	if err != nil {
 		if IsErrListNotExist(err) {
 			return nil
@@ -258,7 +208,7 @@ func DeleteListByRepoID(repoID, ListIndex int64) error {
 		return err
 	}
 
-	if list.NumCards > 0{
+	if list.NumCards > 0 {
 		if err := list.Empty(); err != nil{
 			return err
 		}
@@ -286,6 +236,22 @@ func DeleteListByRepoID(repoID, ListIndex int64) error {
 	return sess.Commit()
 }
 
+// DeleteMilestoneByRepoID deletes a milestone from a repository.
+func (list *List) empty(e Engine) error {
+	if list.Cards != nil {
+		for _, card := range list.Cards {
+			if _, err := e.Delete(&Card{ID: card.ID, ListID: card.ListID}); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+func (list *List) Empty() error {
+	return list.empty(x)
+}
+
 
 
 
@@ -296,6 +262,15 @@ func DeleteListByRepoID(repoID, ListIndex int64) error {
 //   \______  (____  /__|  \____ | 
 //          \/     \/           \/ 
 
+type CardState int
+
+const (
+	CARD_STATE_EXPIRED CardState = iota
+	CARD_STATE_ACTIVE
+	CARD_STATE_CLOSED
+	CARD_STATE_PLANNED
+)
+
 type Card struct {
 	ID            int64  `xorm:"pk autoincr"`
 	ListID        int64  
@@ -303,43 +278,25 @@ type Card struct {
 	Assignee      *User  `xorm:"-"`
 	Description   string `xorm:"TEXT"`
 	Position	  int64  
-	State 		  int
-	LimitDate 	  time.Time `xorm:"-"`
-	LimitDateUnix int64
-	Created       time.Time `xorm:"-"`
+	State 		  CardState
+	Duration 	  int64
+	ActivatedUnix int64
 	CreatedUnix   int64
-	Updated       time.Time `xorm:"-"`
-	UpdatedUnix   int64
 }
 
 func (card *Card) BeforeInsert() {
 	card.CreatedUnix = time.Now().Unix()
-	card.UpdatedUnix = card.CreatedUnix
-}
-
-func (card *Card) BeforeUpdate() {
-	card.UpdatedUnix = time.Now().Unix()
-}
-
-func (card *Card) AfterSet(colName string, _ xorm.Cell) {
-	switch colName {
-		case "created_unix":
-			card.Created = time.Unix(card.CreatedUnix, 0).Local()
-		case "updated_unix":
-			card.Updated = time.Unix(card.UpdatedUnix, 0)
-	}
 }
 
 func (card *Card) APIFormat() *api.Card {
 	apiCard := &api.Card {
-		ID:       card.ID,
-		List:     card.ListID,
-		Index:    card.Position,
-		Body:     card.Description,
-		State:    card.State,
-		Limit: 	  card.LimitDateUnix,
-		Created:  card.Created,
-		Updated:  card.Updated,
+		ID:       	card.ID,
+		List:     	card.ListID,
+		Index:    	card.Position,
+		Body:     	card.Description,
+		State:    	int(card.State),
+		Duration: 	card.Duration,
+		Activated:	card.ActivatedUnix,
 	}
 
 	if card.Assignee != nil {
@@ -358,6 +315,18 @@ func countListCards(e Engine, listID int64) int64 {
 // CountRepoMilestones returns number of milestones in given repository.
 func CountListCards(listID int64) int64 {
 	return countListCards(x, listID)
+}
+
+func (card *Card) IsClosed() bool {
+	return card.State == CARD_STATE_CLOSED
+}
+
+func (card *Card) IsActive() bool {
+	return card.State == CARD_STATE_ACTIVE
+}
+
+func (card *Card) IsExpired() bool {
+	return card.State == CARD_STATE_EXPIRED
 }
 
 func (card *Card) loadAttributes(e Engine) (err error) {
@@ -430,23 +399,102 @@ func NewCard(repo *Repository, card *Card) (err error) {
 	return nil
 }
 
-func getCardByListID(e Engine, id int64, listID int64) (*Card, error) {
+// GetIssueByIndex returns raw issue without loading attributes by index in a repository.
+func GetRawCardByID(e Engine, id int64) (*Card, error) {
+	card := new(Card)
+	has, err := e.Id(id).Get(card)
+	if err != nil {
+		return nil, err
+	} else if !has {
+		return nil, ErrCardNotExist{0, 0, id}
+	}
+	return card, nil
+}
+
+func getCardByID(e Engine, id int64) (*Card, error) {
+	card, err := GetRawCardByID(e, id)
+	if err != nil {
+		return nil, err
+	}
+	return card, card.LoadAttributes()
+}
+
+// GetRepositoryByID returns the repository by given id if exists.
+func GetCardByID(id int64) (*Card, error) {
+	return getCardByID(x, id)
+}
+
+// GetIssueByIndex returns raw issue without loading attributes by index in a repository.
+func GetRawCardByListID(e Engine, listID, id int64) (*Card, error) {
 	card := &Card{
-		ID 		:id,	
-		ListID	:listID,
+		ID 		: id,
+		ListID 	: listID,
 	}
 	has, err := e.Get(card)
 	if err != nil {
 		return nil, err
 	} else if !has {
-		return nil, ErrCardNotExist{0, listID, 0}
+		return nil, ErrCardNotExist{0, listID, id}
 	}
-	return card, err
+	return card, nil
 }
 
-// GetRepositoryByID returns the repository by given id if exists.
-func GetCardByListID(id int64, listID int64) (*Card, error) {
-	return getCardByListID(x, id, listID)
+// GetIssueByIndex returns issue by index in a repository.
+func getCardByListID(e Engine, listID, id int64) (*Card, error) {
+	card, err := GetRawCardByListID(e, listID, id)
+	if err != nil {
+		return nil, err
+	}
+	return card, card.LoadAttributes()
+}
+
+// GetIssueByID returns an issue by given ID.
+func GetCardByListID(listID, id int64) (*Card, error) {
+	return getCardByListID(x, listID, id)
+}
+
+func (list *List) getCards(e Engine) (err error) {
+	list.Cards = make([]*Card, 0, list.NumCards)
+	return e.Where("list_id=?", list.ID).Asc("position").Find(&list.Cards)
+}
+
+// GetLabelsByIssueID returns all labels that belong to given issue by ID.
+func (list *List) GetCards() error {
+	return list.getCards(x)
+}
+
+func (card *Card) updateCardList(e Engine, newListID int64) error {
+	_, err := GetRawListByID(e, card.ListID)
+	if err != nil {
+		if IsErrListNotExist(err) {
+			return nil
+		}
+		return err
+	}
+
+	_, err = GetRawListByID(e, newListID)
+	if err != nil {
+		if IsErrListNotExist(err) {
+			return nil
+		}
+		return err
+	}
+
+	if _, err = e.Exec("UPDATE `list` SET num_cards = num_cards - 1 WHERE id = ?", card.ListID); err != nil {
+		return err
+	}
+
+	if _, err = e.Exec("UPDATE `list` SET num_cards = num_cards + 1 WHERE id = ?", newListID); err != nil {
+		return err
+	}
+
+	card.ListID = newListID
+	return nil
+
+}
+
+func (card *Card) UpdateCardList(newListID int64) error {
+	return card.updateCardList(x, newListID)
 }
 
 func updateCard(e Engine, c *Card) error {
@@ -459,53 +507,41 @@ func UpdateCard(c *Card) error {
 	return updateCard(x, c)
 }
 
-// DeleteMilestoneByRepoID deletes a milestone from a repository.
-func (list *List) empty(e Engine) error {
-	if list.Cards != nil {
-		for _, card := range list.Cards {
-			if _, err := e.Delete(&Card{ID: card.ID, ListID: card.ListID}); err != nil {
-				return err
-			}
-		}
+func (card *Card) updateActivatedDate(e Engine) error {
+	if _, err := e.Exec("UPDATE `card` SET activated_date =  ? WHERE id = ?", time.Now().Unix(), card.ID); err != nil {
+		return err
 	}
 	return nil
 }
 
-func (list *List) Empty() error {
-	return list.empty(x)
+func (card *Card) UpdateActivatedDate() error {
+	return card.updateActivatedDate(x)
 }
 
-// GetIssueByIndex returns raw issue without loading attributes by index in a repository.
-func GetRawCardByIndex(listID, index int64) (*Card, error) {
-	card := &Card{
-		ListID: 	listID,
-		Position:   index,
+func updateCardDuration(e Engine, duration, id int64) error {
+	if _, err := e.Exec("UPDATE `card` SET duration = ? WHERE id = ?", duration, id); err != nil {
+		return err
 	}
-	has, err := x.Get(card)
-	if err != nil {
-		return nil, err
-	} else if !has {
-		return nil, ErrCardNotExist{0, listID, index}
-	}
-	return card, nil
+	return nil
 }
 
-// GetIssueByIndex returns issue by index in a repository.
-func getCardByIndex(e Engine, listID, CardIndex int64) (*Card, error) {
-	card, err := GetRawCardByIndex(listID, CardIndex)
-	if err != nil {
-		return nil, err
-	}
-	return card, card.LoadAttributes()
+func UpdateCardDuration(duration, id int64) error {
+	return updateCardDuration(x, duration, id)
 }
 
-// GetIssueByID returns an issue by given ID.
-func GetCardByIndex(listID, CardIndex int64) (*Card, error) {
-	return getCardByIndex(x, listID, CardIndex)
+func updateCardStatus(e Engine, state CardState, id int64) error {
+	if _, err := e.Exec("UPDATE `card` SET state = ? WHERE id = ?", state, id); err != nil {
+		return err
+	}
+	return nil
+}
+
+func UpdateCardStatus(state CardState, id int64) error {
+	return updateCardStatus(x, state, id)
 }
 
 // DeleteMilestoneByRepoID deletes a milestone from a repository.
-func DeleteCardByListID(listID int64, id int64, repoID int64) error {
+func DeleteCard(id int64) error {
 	card, err := GetCardByID(id)
 	if err != nil {
 		if IsErrListNotExist(err) {
@@ -514,7 +550,7 @@ func DeleteCardByListID(listID int64, id int64, repoID int64) error {
 		return err
 	}
 
-	list, err := GetListByRepoID(listID, repoID)
+	list, err := GetListByID(card.ListID)
 	if err != nil {
 		return err
 	}
@@ -536,62 +572,16 @@ func DeleteCardByListID(listID int64, id int64, repoID int64) error {
 	return sess.Commit()
 }
 
-func getCardByID(e Engine, id int64) (*Card, error) {
-	card := new(Card)
-	has, err := e.Id(id).Get(card)
+func (card * Card) HasAssignee() bool{
+	return card.AssigneeID > 0
+}
+
+
+func (u *User) CanEditCard(id int64) bool {
+	card, err := GetCardByID(id)
 	if err != nil {
-		return nil, err
-	} else if !has {
-		return nil, ErrCardNotExist{id, 0, 0}
-	}
-	return card, card.LoadAttributes()
-}
-
-// GetIssueByID returns an issue by given ID.
-func GetCardByID(id int64) (*Card, error) {
-	return getCardByID(x, id)
-}
-
-func (list *List) getCards(e Engine) (err error) {
-	list.Cards = make([]*Card, 0, list.NumCards)
-	return e.Where("list_id=?", list.ID).Asc("position").Find(&list.Cards)
-}
-
-// GetLabelsByIssueID returns all labels that belong to given issue by ID.
-func (list *List) GetCards() error {
-	return list.getCards(x)
-}
-
-func (card *Card) moveCard(e Engine, newListID int64) error {
-	_, err := GetRawListByID(card.ListID)
-	if err != nil {
-		if IsErrListNotExist(err) {
-			return nil
-		}
-		return err
+		return false
 	}
 
-	_, err = GetRawListByID(newListID)
-	if err != nil {
-		if IsErrListNotExist(err) {
-			return nil
-		}
-		return err
-	}
-
-	if _, err = e.Exec("UPDATE `list` SET num_cards = num_cards - 1 WHERE id = ?", card.ListID); err != nil {
-		return err
-	}
-
-	if _, err = e.Exec("UPDATE `list` SET num_cards = num_cards + 1 WHERE id = ?", newListID); err != nil {
-		return err
-	}
-
-	card.ListID = newListID
-	return nil
-
-}
-
-func (card *Card) MoveCard(newListID int64) error {
-	return card.moveCard(x, newListID)
+	return !card.HasAssignee() || card.AssigneeID == u.ID
 }

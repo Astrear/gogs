@@ -1182,6 +1182,34 @@ function searchTags() {
     });
 }
 
+function getNotifications() {
+    suburl = $('meta[name=_suburl]').attr("content");
+    var count = 0;
+    var notificationsCount = $("#notifications_count");
+    $.ajax({
+        url: suburl + '/api/v1/notifications/get',
+        dataType: "json",
+        success: function (response) {
+            if (response.ok && response.data.length) {
+                $("#menu_notifications").children('.item').remove();
+                $.each(response.data, function (i, item) {
+                    $("#menu_notifications").append('<div class="item"><a class="itemNotification" href="'+suburl+'/notifications"><i class="octicon octicon-megaphone "></i><span class="text">'+item.description+'</span><p class="timeSinceNotification">'+item.time_since+'</p></a></div>');
+                });
+
+                $("#menu_notifications").append('<div class="item"><a href="'+suburl+'/notifications"><i class="octicon octicon-plus-small "></i><span class="text">VER MÁS...</span></a></div>');
+
+                if(response.count > 0){
+                    notificationsCount.html(response.count);
+                    notificationsCount.show();
+                }
+                
+            } else {
+                console.log("Error al consultar notificaciones");
+            }
+        }
+    });
+}
+
 function getSubjectsFromProfessor(){
     var $subjectsBox = $("#subject-box");
     var $semesterBox = $("#semester-box");
@@ -1282,7 +1310,7 @@ function getCoursesBySemester(){
                     return str && str.length > 0;
                 };
 
-                courses = JSON.parse(JSON.stringify(response)).data;
+                var courses = JSON.parse(JSON.stringify(response)).data;
 
                 $list.empty()
 

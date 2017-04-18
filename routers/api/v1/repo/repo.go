@@ -7,7 +7,7 @@ package repo
 import (
 	"path"
 	"strconv"
-
+	"fmt"
 	api "github.com/gogits/go-gogs-client"
 
 	"github.com/gogits/gogs/models"
@@ -316,16 +316,39 @@ func EvaluateRepo(ctx *context.APIContext) {
 	}
 
 	models.AddPointsUser(userID, 10)
+	repo,_ := models.GetRepositoryByID(repoID)
+	u,_:= models.GetUserByID(userID)
 
 	if (calificacion >= 8){
-		repo,_ := models.GetRepositoryByID(repoID)
 		models.AddPointsUser(repo.OwnerID, 20)
+		//SEND NOTIFICATION
+		message := u.Name + " ha calificado positivamente tu repositorio " + repo.Name
+		errNotification := models.CreateNotification(repo.OwnerID, message, 3)
+		if errNotification != nil{
+			fmt.Errorf("Error at CreateNotification: %v", errNotification)
+		}
+		//SEND NOTIFICATION
+	}
+	if (calificacion <= 5){
+		models.SubtractPointsUser(repo.OwnerID, 25)
+		//SEND NOTIFICATION
+		message := u.Name + " ha calificado negativamente tu repositorio " + repo.Name
+		errNotification := models.CreateNotification(repo.OwnerID, message, 4)
+		if errNotification != nil{
+			fmt.Errorf("Error at CreateNotification: %v", errNotification)
+		}
+		//SEND NOTIFICATION
+	}
+	if(calificacion== 7 || calificacion == 6){
+		//SEND NOTIFICATION
+		message := u.Name + " ha calificado tu repositorio " + repo.Name
+		errNotification := models.CreateNotification(repo.OwnerID, message, 5)
+		if errNotification != nil{
+			fmt.Errorf("Error at CreateNotification: %v", errNotification)
+		}
+		//SEND NOTIFICATION	
 	}
 
-	if (calificacion <= 5){
-		repo,_ := models.GetRepositoryByID(repoID)
-		models.SubtractPointsUser(repo.OwnerID, 25)
-	}
 
 	results := make([]*api.Rate, 1)
 	results[0] = &api.Rate{

@@ -1,0 +1,182 @@
+{{if .NonColl}}
+<div class="ui centered grid">
+	<div class="ten wide column">
+		<div class="ui negative message">
+			<i class="close icon"></i>
+			<div class="header">
+				Collaborators
+			</div>
+			<p>Los siguientes colaboradores han abandonado el repositorio y aun tienen tarjetas asignadas.</p>
+			<p>{{.NonColl}}</p>
+		</div>
+	</div>
+</div>
+{{end}}
+
+<div class="ui centered grid">
+	<div class="ten wide column">
+		<div class="ui warning hidden message">
+			<div class="header">
+				Operacion No Permitida
+			</div>
+			<p></p>
+		</div>
+	</div>
+</div>
+
+
+<div class="ui modal" id="NewList">
+	<div class="header">
+		Nueva Lista
+	</div>
+	<div class="content">
+		<form class="ui form" id="NewListForm">
+			<div class="field">
+				<label>Titulo de la lista</label>
+				<input id="Title" placeholder="Titulo de la lista" type="text" required>
+			</div>
+		</form>
+	</div>
+	<div class="actions">
+		<div class="ui deny button">Cancelar</div>
+		<div class="ui positive button">Aceptar</div>
+	</div>
+</div>
+
+
+<div class="ui modal" id="EditList">
+	<div class="header">
+		Editar Lista
+	</div>
+	<div class="content">
+		<form class="ui form" id="EditListForm">
+			<div class="field">
+				<label>Titulo de la lista</label>
+				<input id="EditTitle" placeholder="Titulo de la lista" type="text">
+			</div>
+		</form>
+	</div>
+	<div class="actions">
+		<div class="ui deny button">Cancelar</div>
+		<div class="ui positive button">Actualizar</div>
+	</div>
+</div>
+
+
+<div class="ui modal" id="DeleteList">
+	<div class="ui icon header">
+		<i class="trash icon"></i>
+		Eliminar Lista
+	</div>
+	<div class="content">
+		<span class="delete message"></span>
+		<form class="ui form" id="EditCardForm">
+			<div class="grouped fields">
+			</div>
+		</form>
+	</div>
+	<div class="actions">
+		<div class="ui deny button">Cancelar</div>
+		<div class="ui positive button">Eliminar</div>
+	</div>
+</div>
+
+
+<div class="ui modal" id="EditCard">
+	<div class="header">
+		Editar Tarjeta
+	</div>
+	<div class="content">
+		<form class="ui form" id="EditCardForm">
+			<div class="field">
+				<label>Descripcion</label>
+				<textarea id="Description" placeholder="Decscripcion de la tarjeta"> </textarea>
+			</div>
+			<div class="inline fields">
+				<div class="field">
+					<span>
+						<button class="ui icon black active button">
+							<i class="user icon"></i> Asignar a 
+						</button>
+						<div class="ui inline dropdown" id="Assignee">
+							<input type="hidden">
+							<div class="text">
+								<img class="ui avatar image" src="">
+							</div>
+							<i class="dropdown icon"></i>
+							<div class="menu">
+								<div class="item" data-value="{{.Owner.Name}}">
+									<img class="ui avatar image" src="{{.Owner.AvatarLink}}"> {{.Owner.Name}}
+								</div>
+								{{range .Collaborators}}
+								<div class="item" data-value="{{.Name}}">
+									<img class="ui avatar image" src="{{.AvatarLink}}"> {{.Name}}
+								</div>
+								{{end}}
+							</div>
+						</div>
+					</span>
+				</div>
+				
+			</div>
+		</form>
+	</div>
+	<div class="actions">
+		<div class="ui deny button">Cancelar</div>
+		<div class="ui positive button" id="UpdateCard">Actualizar</div>
+	</div>
+</div>
+
+
+<div class="ui modal" id="EditDuration">
+	<div class="header">
+		Define un tiempo limite para la tarjeta
+	</div>
+	<div class="content">
+		<form class="ui form" id="DurationForm">
+			<div class="inline fields">
+				<div class="four wide field">
+					<div class="ui right labeled input">
+						<input placeholder="Dias" id="Days" type="text">
+						<div class="ui label">
+							DD
+						</div>
+					</div>
+				</div>
+				<div class="four wide field">
+					<div class="ui right labeled input">
+						<input placeholder="Horas" id="Hours" type="text">
+						<div class="ui label">
+							HH
+						</div>
+					</div>
+				</div>
+				<div class="four wide field">
+					<div class="ui right labeled input">
+						<input placeholder="Minutos" id="Minutes" type="text">
+						<div class="ui label">
+							MM
+						</div>
+					</div>
+				</div>
+			</div>
+		</form>
+	</div>
+	<div class="actions">
+		<div class="ui deny button">Cancelar</div>
+		<div class="ui positive button" id="UpdateCard">Actualizar</div>
+	</div>
+</div>
+
+
+<div class="ui modal" id="DeleteCard">
+  <div class="header">Eliminar Tarjeta</div>
+  <div class="content">
+    <p>Esta operación es irreversible, ¿Desea continuar?</p>
+   	<span class="target"></span>
+  </div>
+  <div class="actions">
+  	<div class="ui deny button">Cancel</div>
+    <div class="ui positive button">Aceptar</div>
+  </div>
+</div>

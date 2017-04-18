@@ -181,9 +181,9 @@ func  GetArrayCoursesbySemester(profID int64) ([][]*CourseInfo, error) {
 }
 
 // ChangeCourseStatus changes active or inactive status.
-func (u *User) ChangeCourseStatus(subjID int64, active int) error {
+func ChangeCourseStatus(courseID int64, active int) error {
 	c := new(Course)
-	has, err := x.Where("uid=?", u.ID).And("subj_id=?", subjID).Get(c)
+	has, err := x.Where("id=?", courseID).Get(c)
 	if err != nil {
 		return err
 	} else if !has {

@@ -1,649 +1,144 @@
 {{template "base/head" .}}
 <style type="text/css" media="screen">
-	.CardsConatainer{
-		min-height: 100% !important;
+	
+	.grid.board{
+		overflow-x: auto;
+		flex: 0 1 auto;
+		flex-wrap: nowrap;
+		height: 85%;
+		min-height: 85%;
+	}
+
+	.full.height{
+		height: 100%;
+	}
+
+	.repository{
+		display: flex;
+		flex-flow: column;
+		flex-grow: 1;
+		padding-bottom: 0;
+		height: 87%;
+		max-height: 87%;
 	}
 
 	.hidden{
 		display: none;
 	}
 
+	.list.title{
+		max-width: 55%;
+	}
+
+	.ui.card .meta.duration{
+		font-size: 0.8rem;
+	}
+
+	.column.list_{
+		min-width: 325px;
+	}
+
+	.column.list_ > .holder{
+		min-height: 95%;
+		max-height: 95%;
+		overflow-y: auto;
+	}
+
+	.ui.red.card{
+		box-shadow: 0 0 0 1px #d4d4d5,0 3px 0 1px #EC4E6AB3,0 1px 3px 0 #d4d4d5;
+	}
+
+	.ui.olive.card{
+		box-shadow: 0 0 0 1px #d4d4d5,0 3px 0 1px #8EE489CC,0 1px 3px 0 #d4d4d5;
+	}
+
+	.ui.teal.card{
+		box-shadow: 0 0 0 1px #d4d4d5,0 3px 0 1px #96C7E4B3,0 1px 3px 0 #d4d4d5;
+	}
+
+	.card .content .description{
+		padding-top: 5px;
+		word-wrap: break-word;
+	}
+
+	.card .content .description p {
+		white-space: pre-line;
+	}
+
+
 </style>
+
 <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
-<link rel="stylesheet" type="text/css" href="https://code.jquery.com/ui/1.12.0/themes/smoothness/jquery-ui.css">
-<script>
-
-	$( function(){
-		$( ".Board" ).sortable({items: ".column:not(.ExcludeColumn, ul, li)"});
-		$( ".Board > form > .field" ).disableSelection();
-		$( ".segment" ).sortable({connectWith: ".segment"});
-		$( ".segment" ).disableSelection();
-		$('.card').transition('pulse');
-	});
-
-	$(function(){
-		$(".NewCardTrigger").click(function(){
-			$($(".RepoList").get($(this).data("index"))).find("form").toggleClass('hidden');
-		});
-	});
-
-	$( function(){
-		$( "#datepicker" ).datepicker();
-	});
-
-</script>
 
 <div class="repository">
+
 	{{template "repo/header" .}}
-	<div class="ui padded grid Board"> <!-- Start of Board-->
+	{{template "base/board_modal_actions" .}}
+	<div class="ui padded unstackable grid board"> <!-- Start of Board-->
+
 		{{range .Lists}} <!-- Array of lists-->
-		
-		<div class="three wide column RepoList" data-id="{{.ID}}" data-index="{{.Position}}"> <!-- Representation of a list -->
-			
-			<div class="ui top attached menu">
-				<div class="header item">{{.Title}}</div>
+
+		<div class="three wide column list_" data-id="{{.ID}}" data-index="{{.Position}}"> <!-- Representation of a list -->
+			<div class="ui top attached borderless compact inverted small menu">
+				<div class="ui sub header list title item">{{.Title}}</div>
 				<div class="right menu">
-					<a class="item">
-						<i class="setting icon EditListButton" data-index="{{.Position}}"></i>
-					</a>
-					<a class="item">
-						<i class="close icon DeleteList" data-index="{{.Position}}"></i>
+					<a class="fitted item">
+						<div class="ui black compact icon buttons">
+							<button class="ui button edit list"><i class="setting icon"></i></button>
+							<button class="ui button new task"><i class="plus icon"></i></button>
+							<button class="ui button delete list"><i class="close icon"></i></button>
+						</div>
 					</a>
 				</div>
 			</div>
 
-			<ul class="ui bottom attached centered segment CardsConatainer">
-				{{range .Cards}}
-				<li class="ui card" data-index="{{.Position}}" data-list="{{.ListID}}" data-state="{{.State}}" data-assignee="{{if .AssigneeID}}{{.Assignee.Name}}{{end}}" data-limit="{{.LimitDateUnix}}">
-					<div class="small content">
-						<div class="right floated">
-							<button class="circular mini ui icon button ConfigCard" data-index="{{.Position}}">
-								<i class="settings icon"></i>
-							</button>
-							<button class="circular mini ui icon button DeleteCard" data-index="{{.Position}}">
-								<i class="close icon"></i>
-							</button>
-						</div>
-						{{if .AssigneeID}}
-						<span class="Assignee"><img class="ui avatar image" src="{{.Assignee.AvatarLink}}"> <a class="Owner" href="{{AppSubUrl}}/{{.Assignee.Name}}">{{.Assignee.Name}}</a></span>
-						{{end}}
+			<ul class="ui bottom attached centered secondary segment holder">
+				<form class="ui mini hidden form disabled">
+					<div class="field">
+						<textarea rows="2" placeholder="Descipcion de la tarjeta"></textarea>
 					</div>
+					<div class="ui fluid mini black button add task">Añadir</div>
+				</form>
+				{{range .Cards}}
+				<li class="ui card"  data-id="{{.ID}}" data-list="{{.ListID}}" data-index="{{.Position}}" data-state="{{.State}}" data-assignee="{{if .AssigneeID}}{{.Assignee.Name}}{{end}}" data-duration="{{.Duration}}" data-activated="{{.ActivatedUnix}}">
+					{{if not $.Repository.IsClosed}}
+					<div class="ui top attached mini icon buttons">
+						<button class="ui button edit task" data-tooltip="Editar" data-position="bottom center"><i class="setting icon"></i></button>
+						<button class="ui button set duration" data-tooltip="Duración" data-position="bottom center"><i class="alarm icon"></i></button>
+						<button class="ui button change state" data-tooltip="" data-position="bottom center"><i class="icon"></i></button>
+						<button class="ui button delete task" data-tooltip="Eliminar" data-position="bottom center"><i class="close icon"></i></button>
+					</div>
+					{{end}}
 					<div class="content">
+						<div class="left floated author assignee">
+							{{if .AssigneeID}}
+							<img class="ui avatar image" src="{{.Assignee.AvatarLink}}">{{.Assignee.Name}}
+							{{end}}
+						</div>
+						<div class="right floated meta time duration"></div>
 						<div class="description">
 							<p>{{.Description}}</p>
 						</div>
 					</div>
-					<div class="extra content">
-						<span class="right floated meta LimitDate"></span>
-					</div>
 				</li>
 				{{end}}
-				<button class="ui bottom right attached label NewCardTrigger" data-index="{{.Position}}"><i class="plus icon"></i></button>
 			</ul>
-			
-			<form class="ui small hidden form NewCardForm">
-				<div class="field">
-					<textarea rows="2" placeholder="Descipcion de la tarjeta"></textarea>
-				</div>
-				<div class="ui right floated button NewCardButton" data-index="{{.Position}}">Añadir</div>
-			</form>
-
 		</div>
-
 		{{end}}
 
-		<div class="four wide column middle aligned ExcludeColumn">
-			<button class="ui right floated vk labeled icon button" id="NewListButton">
-				<i class="plus icon"></i>
-				Nueva Lista
+		{{if not .Repository.IsClosed}}
+		<div class="four wide middle aligned centered column disabled">
+			<button class="ui basic labeled icon button add list">
+				<i class="plus icon"></i> Nueva Lista
 			</button>
 		</div>
+		{{end}}
 
 	</div><!-- End of Board -->
 </div>
 
-<!-- 
-
-//   _______                _________                  .___
-//   \      \   ______  _  _\_   ___ \_____ _______  __| _/
-//   /   |   \_/ __ \ \/ \/ /    \  \/\__  \\_  __ \/ __ | 
-//  /    |    \  ___/\     /\     \____/ __ \|  | \/ /_/ | 
-//  \____|__  /\___  >\/\_/  \______  (____  /__|  \____ | 
-//          \/     \/               \/     \/           \/ 
-
--->
-<div class="ui modal" id="NewList">
-	<div class="header">
-		Nueva Lista
-	</div>
-	<div class="content">
-		<form class="ui form" id="NewListForm">
-			<div class="field">
-				<label>Titulo de la lista</label>
-				<input id="NewListTitle" placeholder="Titulo de la lista" type="text" required>
-			</div>
-		</form>
-	</div>
-	<div class="actions">
-		<div class="ui deny button">Cancelar</div>
-		<div class="ui positive button">Aceptar</div>
-	</div>
-</div>
-
-<!--
-
-//  ___________    .___.__  __  .____    .__          __   
-//  \_   _____/  __| _/|__|/  |_|    |   |__| _______/  |_ 
-//   |    __)_  / __ | |  \   __\    |   |  |/  ___/\   __\
-//   |        \/ /_/ | |  ||  | |    |___|  |\___ \  |  |  
-//  /_______  /\____ | |__||__| |_______ \__/____  > |__|  
-//          \/      \/                  \/       \/        
-
--->
-<div class="ui modal" id="EditList">
-	<div class="header">
-		Editar Lista
-	</div>
-	<div class="content">
-		<form class="ui form" id="EditListForm">
-			<div class="field">
-				<label>Titulo de la lista</label>
-				<input id="EditListTitle" placeholder="Titulo de la lista" type="text">
-			</div>
-		</form>
-	</div>
-	<div class="actions">
-		<div class="ui deny button">Cancelar</div>
-		<div class="ui positive button EditListAccept" id="UpdateList">Actualizar</div>
-	</div>
-</div>
-
-
-<!--
-
-//  ___________    .___.__  __   _________                  .___
-//  \_   _____/  __| _/|__|/  |_ \_   ___ \_____ _______  __| _/
-//   |    __)_  / __ | |  \   __\/    \  \/\__  \\_  __ \/ __ | 
-//   |        \/ /_/ | |  ||  |  \     \____/ __ \|  | \/ /_/ | 
-//  /_______  /\____ | |__||__|   \______  (____  /__|  \____ | 
-//          \/      \/                   \/     \/           \/ 
-
--->
-<div class="ui modal" id="EditCard">
-	<div class="header">
-		Editar Tarjeta
-	</div>
-	<div class="content">
-		<form class="ui form" id="EditCardForm">
-			<div class="field">
-				<label>Descripcion</label>
-				<textarea name="EditCardDesc" placeholder="Decscripcion de la tarjeta"> </textarea>
-			</div>
-			
-
-			<div class="inline fields">
-				<div class="field">
-					<div class="ui top left pointing labeled icon dropdown button" id="state">
-						<input name="CardState" type="hidden" value="4">
-						<i class="circle notched icon"></i>
-						<span class="text">Estado</span>
-						<div class="menu">
-							<div class="item" data-value="1">
-								<div class="ui empty circular label" style="background-color: #B5D95E"></div>
-								Activo
-							</div>
-							<div class="item" data-value="2">
-								<div class="ui empty circular label" style="background-color: #68CCDE"></div>
-								Terminado
-							</div>
-							<div class="item" data-value="4">
-								<div class="ui empty circular label"></div>
-								Sin Estado
-							</div>
-						</div>
-					</div>
-				</div>
-				<div class="field">
-					<div class="ui labeled input">
-						<div class="ui label">
-							<i class="wait icon"></i>
-						</div>
-						<input placeholder="Fecha Limite" type="text" id="datepicker">
-					</div>
-				</div>
-				<div class="field">
-					<span>
-						<button class="ui icon black active button">
-							<i class="user icon"></i> Asignar a 
-						</button>
-						<div class="ui inline dropdown" id="assignee">
-							<input name="CardAssignee" type="hidden">
-							<div class="text">
-								<img class="ui avatar image" src="">
-							</div>
-							<i class="dropdown icon"></i>
-							<div class="menu">
-								<div class="item" data-value="{{.Owner.Name}}">
-									<img class="ui avatar image" src="{{.Owner.AvatarLink}}"> {{.Owner.Name}}
-								</div>
-								{{range .Collaborators}}
-								<div class="item" data-value="{{.Name}}">
-									<img class="ui avatar image" src="{{.AvatarLink}}"> {{.Name}}
-								</div>
-								{{end}}
-							</div>
-						</div>
-					</span>
-				</div>
-				
-			</div>
-		</form>
-	</div>
-	<div class="actions">
-		<div class="ui deny button">Cancelar</div>
-		<div class="ui positive button EditListAccept" id="UpdateCard">Actualizar</div>
-	</div>
-</div>
-
-
-
 <script type="text/javascript">
-	
-	$("form").submit(function(event){
-		event.preventDefault();
-		return false;
-	});
-
-	$(function(){
-		$(document).ready(function($) {
-			$(".card").each(function(index, card){
-				$(card).addClass($CardStates[$(card).data("state")]);
-			});	
-		});
-	});
-
-	var $CardStates = ["red", "olive" , "teal", "grey"];
-	var $ListObject = $(`
-		<div class="three wide column RepoList" data-id="" data-index="">	
-			<div class="ui ui top attached menu">
-				<div class="header item"></div>
-				<div class="right menu">
-					<a class="item"><i class="setting icon EditListButton" data-index=""></i></a>
-					<a class="item"><i class="close icon DeleteList" data-index=""></i></a>
-				</div>
-			</div>
-			<ul class="ui bottom attached centered segment CardsConatainer">
-				<button class="ui bottom right attached label NewCardTrigger" data-index=""><i class="plus icon"></i></button>
-			</ul>
-			<form class="ui small hidden form NewCardForm">
-				<div class="field">
-					<textarea rows="2" placeholder="Descipcion de la tarjeta" />
-				</div>
-				<div class="ui right floated button NewCardButton" data-index="">Añadir</div>
-			</form>
-		</div>
-	`);
-
-	$('#NewList').modal('attach events', '#NewListButton', 'show');
-
-	$('#NewList').modal({
-		approve  : '.positive, .approve, .ok',
-		deny     : '.negative, .deny, .cancel',
-		onApprove: function(){
-			
-			var $ListIndex 	= $(".RepoList").length;
-			var $Title 		= $("#NewListTitle").val();
-			console.log("Created list with index : " + $ListIndex );
-
-			$.post("/api/v1{{$.RepoLink}}/board/list", {title: $Title, index: $ListIndex}, function(data, textStatus, xhr) {
-				var $NewList = $ListObject.clone(true);
-				$NewList.attr("data-id", data.ID);
-				$NewList.attr("data-index", data.Index);
-				$NewList.find('.header').text(data.Title);
-				
-				$NewList.find('.EditListButton').attr("data-index", data.Index);
-				$NewList.find('.EditListButton')[0].addEventListener("click", function(button){
-					$List = $(this).closest(".RepoList");
-					$("#EditList").modal("show");
-				}, false)
-
-				$NewList.find('.DeleteList').attr("data-index", data.Index);
-				$NewList.find('.DeleteList')[0].addEventListener("click", function(button){
-					var $ListIndex 	= $(this).closest(".RepoList").index();
-					DeleteList($ListIndex);
-				}, false)
-
-				$NewList.find('.NewCardTrigger').attr("data-index", data.Index);
-				$NewList.find('.NewCardTrigger')[0].addEventListener("click", function(){
-					$($(".RepoList").get($(this).data("index"))).find("form").toggleClass('hidden');
-				}, false);
-
-				$NewList.find('.NewCardButton').attr("data-index", data.Index);
-				$NewList.find('.NewCardButton')[0].addEventListener("click", function(button){
-					NewCard($($(button.target).closest(".RepoList"))[0]);
-				}, false)
-				
-				if($(".Board").find(".RepoList").length){
-					$(".RepoList").last().after($NewList);
-				} else {
-					$(".ExcludeColumn").before($NewList);
-				}
-			});
-		},
-		onHide: function(){
-			$("#NewListForm")[0].reset();
-		},
-	});
-
-	var $List;
-
-	$('.EditListButton').click( function(event) {
-		$List = $(this).closest(".RepoList");
-		$("#EditList").modal("show");
-	});
-	
-	$('#EditList').modal({
-		approve  : '.positive, .approve, .ok',
-		deny     : '.negative, .deny, .cancel',
-		onShow: function(){
-			var $ListIndex 	= $($List).index();
-			var $ListTitle  = $($List).find(".header").text();
-
-			$("#EditListTitle").val($ListTitle);
-			console.log("Selected list in the position : " + $ListIndex);
-		},
-		onApprove: function() {
-			UpdateList($List);
-		},
-		onHide: function(){
-			$("#NewListForm")[0].reset();
-		},
-	});
-
-	function UpdateList ($ListAction) {
-		var $ListTitle 			= $("#EditListTitle").val();
-		var $ListCurrentIndex 	= $($ListAction).data("index");
-		var $ListNewIndex 		= $($ListAction).index();
-		console.log("Updating list id : " + $($ListAction).data("id") + " index : " + $ListCurrentIndex + " to {Title : " + $ListTitle + ", index: " + $ListNewIndex +" }");
-		$.ajax({
-			url: "/api/v1{{$.RepoLink}}/board/list/" + $ListCurrentIndex,
-			type: 'PATCH',
-			dataType: 'JSON',
-			data: {title: $ListTitle, index: $ListNewIndex}
-		})
-		.done(function(response) {
-			if($ListCurrentIndex != response.Index) {
-				$($ListAction).attr("data-index", response.Index)
-			}
-			if($($ListAction).find('.header').text() != response.Title){
-				$($ListAction).find('.header').text(response.Title);
-			}
-		})
-		.fail(function(data) {
-			console.log("error");
-		})
-		.always(function() {
-			$("#EditListForm")[0].reset();
-			console.log("complete")
-		});
-	}
-
-	$(".DeleteList").click(function(event) {
-		var $ListIndex 	= $(this).closest(".RepoList").index();
-		DeleteList($ListIndex);
-	});
-
-	function DeleteList($ListIndex){
-		console.log("Deleting list :" + $ListIndex);
-		$.ajax({
-			url: "/api/v1{{$.RepoLink}}/board/list/" + $ListIndex,
-			type: 'DELETE',
-			dataType: 'JSON',
-		})
-		.done(function() {
-			$(".RepoList").get($ListIndex).remove();
-			$(".RepoList").each(function(index, element){
-				UpdateList($(this));
-			});
-		})
-		.fail(function() {
-			console.log("error");
-		})
-		.always(function() {
-			$("#EditListForm")[0].reset();
-			console.log("complete");
-		});
-	}
-
-	$( ".Board" ).on( "sortupdate", function( event, ui ) {
-		if($(ui.item.context).hasClass('RepoList')){
-			$.each($(".RepoList"), function(index, element) {
-				UpdateList($(this));
-			});
-		} else {
-			var $ListAction = $(ui.item.context).closest(".RepoList");
-			$($ListAction).find(".card").each(function(index, element){
-				UpdateCard($($(this).context));
-			});
-		}
-		
-	});
+	$RepoLink = {{$.RepoLink}}
 </script>
-
-<script type="text/javascript">
-
-	$(function(){
-		$(document).ready(function($) {
-			$(".card").each(function(index, $Card){
-				if($($Card).data("limit") > 0){
-					var $RemaningTime = GetRemaningDays($($Card).data("limit"));
-					if($RemaningTime.Days > 0 && $RemaningTime.Hours > 0) {
-						$($Card).find(".LimitDate").text($RemaningTime.Days + " dias y " + $RemaningTime.Hours + " horas restantes");
-					} else {
-						$($Card).find(".LimitDate").text("Fecha limite alcanzada");
-						$($Card).removeClass($CardStates[$($Card).data("state")]);
-						$($Card).addClass("red");
-					}
-				}
-			});	
-		});
-	});
-
-	function GetRemaningDays(date){
-		var minutes = (date - Date.now()) / (1000 * 60 * 60);
-		return {Days:  Math.round(minutes / 24), Hours:  Math.round(minutes % 24)}
-	}
-
-	var $CardObject = $(`
-		<li class="ui card" data-index="" data-list="" data-state="" data-assignee="" data-limit="">
-			<div class="small content">
-				<div class="right floated">
-					<button class="circular mini ui icon button ConfigCard" data-index="">
-						<i class="settings icon"></i>
-					</button>
-					<button class="circular mini ui icon button DeleteCard" data-index="">
-						<i class="close icon" />
-					</button>
-				</div>
-				<span class="Assignee" />>
-			</div>
-			<div class="content">
-				<div class="description">
-					<p></p>
-				</div>
-			</div>
-			<div class="extra content">
-				<span class="right floated meta LimitDate" />>
-			</div>
-		</li>
-		`);
-
-	var $Card;
-
-	$(".NewCardButton").click(function(){
-		NewCard($(this));
-	});
-
-	function NewCard($this){
-		var $List   	= $($this).closest('.RepoList');
-		var $ListIndex 	= $($List).index();
-		var $ListID 	= $($List).data("id");
-		var $CardIndex 	= $($List).find(".card").length;
-		var $CardDesc 	= $($List).find("textarea").val();
-
-		console.log("Creating card for list : " + $ListIndex + " with id : " + $ListID + " in index : " + $CardIndex);
-
-		$.post("/api/v1{{$.RepoLink}}/board/card", {list: $ListID, body: $CardDesc, assignee: "", index: $CardIndex,}, function(data, textStatus, xhr) {
-			var $NewCard = $CardObject.clone(true);
-			$NewCard.attr("data-index", data.Index);
-			$NewCard.attr("data-list", data.ListID);
-			$NewCard.attr("data-state", data.State);
-			$NewCard.attr("data-limit", data.Limit);
-			$NewCard.find('p').text(data.Body);
-
-			$NewCard.find('.ConfigCard').attr("data-index", data.Index);
-			$NewCard.find('.ConfigCard')[0].addEventListener("click", function(button){
-				$Card = $(this).closest(".card")
-				$("#EditCard").modal("show");
-			}, false);
-
-			$NewCard.find('.DeleteCard').attr("data-index", data.Index);
-			$NewCard.find('.DeleteCard')[0].addEventListener("click", function(button){
-				$Card = $(this).closest(".card");
-				DeleteCard($Card);
-			}, false);
-			$($List).find(".CardsConatainer").append($NewCard);
-		});
-	}
-	
-	$('.ConfigCard').click(function(event){
-		$Card = $(this).closest(".card")
-		$("#EditCard").modal("show");
-	});
-
-	$('#EditCard').modal({
-		approve  : '.positive, .approve, .ok',
-		deny     : '.negative, .deny, .cancel',
-		onShow	 : function(){
-			$List   			= $($Card).closest('.RepoList');
-			var $ListID 		= $($List).data("id");
-			var $CardIndex 		= $($Card).index();
-			var $CardDesc 		= $($Card).find(".description > p").text();
-			var $CardState 		= $($Card).data("state");
-			var $CardAssignee 	= $($Card).data("assignee");
-			var $CardLimit 		= $($Card).data("limit");
-
-			console.log("Editing card of list : " + $ListID + " in the position : " + $CardIndex);
-			console.log("Default values of the card :  {body: " + $CardDesc + ", state: " + $CardState + ", assignee: " + $CardAssignee + ", limit: " + $CardLimit);
-
-			$("#EditCard").find("textarea").val($CardDesc);
-			$("#EditCard").find("#state").dropdown("set selected", $CardState);
-			if($CardAssignee.length){
-				$("#EditCard").find("#assignee").dropdown("set selected", $CardAssignee);
-			} else {
-				$("#EditCard").find("#assignee").dropdown("clear");
-			}
-			if($CardLimit){
-				$("#EditCard").find("#datepicker").datepicker("setDate", new Date($CardLimit));
-			} else {
-				$("#EditCard").find("#datepicker").datepicker("setDate", null);
-			}
-		},
-		onApprove : function(){
-			UpdateCard($Card, false)
-		},
-		onHide: function(){
-			$("textarea[name='EditCardDesc']").val("")
-			$("#EditCard").find("#state").dropdown("clear");
-			$("#EditCard").find("#assignee").dropdown("clear");
-			$("#EditCard").find("#datepicker").datepicker("setDate", null);
-		},
-	});
-
-	function UpdateCard($CardAction, $Move){
-		console.log($CardAction);
-		var $CardCurrentIndex 	= $($CardAction).data("index");
-		var $CardNewIndex 		= $($CardAction).index();
-		var $ContainerList 		= $($CardAction).closest(".RepoList");
-		var $ContainerListID 	= $($CardAction).data("list");
-		var $Limit 				= $("#datepicker").datepicker("getDate") != null ? $("#datepicker").datepicker("getDate").getTime() : 0;
-		var $Assignee 			= $("#assignee").dropdown("get value");
-		var $State 				= $("#state").dropdown("get value");
-		var $Description 		= $("textarea[name='EditCardDesc']").val();
-
-		console.log("Update card " + $CardCurrentIndex + " to : {list: " + $ContainerListID + ", index: " + $CardNewIndex +", body: " + $Description.length + ", assignee: " + $Assignee + ", state: " + $State + ", limit: " + $Limit + "}");
-		$.ajax({
-			//url: "/api/v1{{$.RepoLink}}/board/card/" + $ContainerListID + "/" + $CardCurrentIndex,
-			type: 'PATCH',
-			dataType: 'JSON',
-			data: {list: $ContainerListID, index: $CardNewIndex, body: $Description, assignee: $Assignee, state: $State, limit: $Limit}
-		})
-		.done(function(response) {
-			if($($CardAction).data("state") != response.State){
-				$($CardAction).attr("data-state", response.State);
-				$($CardAction).removeClass($CardStates[$State]);
-				$($CardAction).addClass($CardStates[response.State]);
-			}
-			if(response.Assignee != null){
-				if($($CardAction).data("assignee") != response.Assignee){
-					$($CardAction).attr("data-assignee", response.Assignee.Name);
-					$($CardAction).find(".Assignee").html("");
-					$($CardAction).find(".Assignee").append("<img class='ui avatar image' src='" + response.Assignee.avatar_url + "'> <a class='Owner' href='{{AppSubUrl}}/"+ response.Assignee.username + ">" + response.Assignee.username + "</a>")
-				}
-			}
-			if($($CardAction).data("limit") != response.Limit){
-				$($CardAction).attr("data-limit", response.Limit);
-				var $RemaningTime = GetRemaningDays(response.Limit);
-				if($RemaningTime.Days > 0 && $RemaningTime.Hours > 0) {
-					$($CardAction).find(".LimitDate").text($RemaningTime.Days + " dias y " + $RemaningTime.Hours + " horas restantes");
-				} else {
-					$($CardAction).find(".LimitDate").text("Fecha limite alcanzada");
-					$($CardAction).removeClass($CardStates[$State]);
-					$($CardAction).addClass("red");
-				}
-
-			}
-			if($($CardAction).find(".description > p").text() != response.Body){
-				$($CardAction).find(".description > p").text(response.Body);
-			}
-		})
-		.fail(function() {
-
-			console.log("error");
-		})
-		.always(function() {
-			$("#EditCardForm")[0].reset();
-			console.log("complete")
-		});
-	}
-
-	$("#DeleteCard").click(function(event) {
-		$Card = $(this).closest(".card");
-		DeleteCard($Card);
-	});
-
-	function DeleteCard($Card){
-		var $ContainerList 		= $($Card).closest(".RepoList");
-		var $ContainerListID 	= $($Card).data("list");
-		var $CardIndex  		= $($Card).index();
-		$("#EditCard").modal("hide");
-		console.log("Deleting card in position :" + $CardIndex);
-		$.ajax({
-			url: "/api/v1{{$.RepoLink}}/board/card/" + $ContainerListID + "/" + $CardIndex,
-			type: 'DELETE',
-			dataType: 'JSON',
-		})
-		.done(function(response) {
-			$($ContainerList).find(".card").each(function(index, element){
-				UpdateCard($(this));
-			});
-		})
-		.fail(function() {
-			console.log("error");
-		})
-		.always(function() {
-			console.log("complete");
-		});
-	}
-</script>
+<script type="text/javascript" src="{{AppSubUrl}}/js/board.js"></script>
 {{template "base/footer" .}}
