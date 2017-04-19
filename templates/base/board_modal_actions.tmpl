@@ -109,9 +109,11 @@
 									<img class="ui avatar image" src="{{.Owner.AvatarLink}}"> {{.Owner.Name}}
 								</div>
 								{{range .Collaborators}}
+								{{if not .IsProfessor}}
 								<div class="item" data-value="{{.Name}}">
 									<img class="ui avatar image" src="{{.AvatarLink}}"> {{.Name}}
 								</div>
+								{{end}}
 								{{end}}
 							</div>
 						</div>
