@@ -1,7 +1,6 @@
 // Copyright 2014 The Gogs Authors. All rights reserved.
 // Use of this source code is governed by a MIT-style
 // license that can be found in the LICENSE file.
-
 package repo
 
 import (
@@ -27,6 +26,7 @@ func Search(ctx *context.APIContext) {
 	}
 
 	// Check visibility.
+
 	if ctx.IsSigned && opts.OwnerID > 0 {
 		if ctx.User.ID == opts.OwnerID {
 			opts.Private = true
@@ -299,67 +299,71 @@ func EvaluateRepo(ctx *context.APIContext) {
 	userID,_ := strconv.ParseInt(ctx.Query("userID"), 10, 64)
 	repoID,_ := strconv.ParseInt(ctx.Query("repoID"), 10, 64)
 
-	rt := &models.CalificacionRepo{
-		UserID: userID,
-		RepoID: repoID,
-		Calificacion: calificacion,
-	}
+	userRate, isSet := models.GetUserRateRepo(userID, repoID)
+	fmt.Println("%+v, %+v", calificacion, userRate)
 
-	has:= models.IsUserStarRepo(userID,repoID)
-	if has{
-		models.UpdateRateUser(userID, repoID, calificacion)
-	}else{
-		if err := models.StarRepository(userID, repoID, calificacion, true); err != nil {
-			ctx.Error(500, "EvaluateRepo", err)
-			return
+	if !isSet || userRate.Calificacion != calificacion {
+		rt := &models.CalificacionRepo{
+			UserID: userID,
+			RepoID: repoID,
+			Calificacion: calificacion,
 		}
-	}
 
-	models.AddPointsUser(userID, 10)
-	repo,_ := models.GetRepositoryByID(repoID)
-	u,_:= models.GetUserByID(userID)
-
-	if (calificacion >= 8){
-		models.AddPointsUser(repo.OwnerID, 20)
-		//SEND NOTIFICATION
-		message := u.Name + " ha calificado positivamente tu repositorio " + repo.Name
-		errNotification := models.CreateNotification(repo.OwnerID, message, 3)
-		if errNotification != nil{
-			fmt.Errorf("Error at CreateNotification: %v", errNotification)
+		has:= models.IsUserStarRepo(userID,repoID)
+		if has{
+			models.UpdateRateUser(userID, repoID, calificacion)
+		}else{
+			if err := models.StarRepository(userID, repoID, calificacion, true); err != nil {
+				ctx.Error(500, "EvaluateRepo", err)
+				return
+			}
 		}
-		//SEND NOTIFICATION
-	}
-	if (calificacion <= 5){
-		models.SubtractPointsUser(repo.OwnerID, 25)
-		//SEND NOTIFICATION
-		message := u.Name + " ha calificado negativamente tu repositorio " + repo.Name
-		errNotification := models.CreateNotification(repo.OwnerID, message, 4)
-		if errNotification != nil{
-			fmt.Errorf("Error at CreateNotification: %v", errNotification)
+
+		models.AddPointsUser(userID, 4)
+		repo,_ := models.GetRepositoryByID(repoID)
+		u,_:= models.GetUserByID(userID)
+
+		if (calificacion >= 8){
+			models.AddPointsUser(repo.OwnerID, 5)
+			//SEND NOTIFICATION
+			message := u.Name + " ha calificado positivamente tu repositorio " + repo.Name
+			errNotification := models.CreateNotification(repo.OwnerID, message, 3)
+			if errNotification != nil{
+				fmt.Errorf("Error at CreateNotification: %v", errNotification)
+			}
+			//SEND NOTIFICATION
 		}
-		//SEND NOTIFICATION
-	}
-	if(calificacion== 7 || calificacion == 6){
-		//SEND NOTIFICATION
-		message := u.Name + " ha calificado tu repositorio " + repo.Name
-		errNotification := models.CreateNotification(repo.OwnerID, message, 5)
-		if errNotification != nil{
-			fmt.Errorf("Error at CreateNotification: %v", errNotification)
+		if (calificacion <= 5){
+			models.SubtractPointsUser(repo.OwnerID, 5)
+			//SEND NOTIFICATION
+			message := u.Name + " ha calificado negativamente tu repositorio " + repo.Name
+			errNotification := models.CreateNotification(repo.OwnerID, message, 4)
+			if errNotification != nil{
+				fmt.Errorf("Error at CreateNotification: %v", errNotification)
+			}
+			//SEND NOTIFICATION
 		}
-		//SEND NOTIFICATION	
+		if(calificacion== 7 || calificacion == 6){
+			//SEND NOTIFICATION
+			message := u.Name + " ha calificado tu repositorio " + repo.Name
+			errNotification := models.CreateNotification(repo.OwnerID, message, 5)
+			if errNotification != nil{
+				fmt.Errorf("Error at CreateNotification: %v", errNotification)
+			}
+			//SEND NOTIFICATION	
+		}
+
+		results := make([]*api.Rate, 1)
+		results[0] = &api.Rate{
+			UserID: rt.UserID,
+			RepoID: rt.RepoID,
+			Calificacion: rt.Calificacion,
+		}
+
+		ctx.JSON(200, map[string]interface{}{
+			"ok":   true,
+			"data": results,
+		})
 	}
-
-
-	results := make([]*api.Rate, 1)
-	results[0] = &api.Rate{
-		UserID: rt.UserID,
-		RepoID: rt.RepoID,
-		Calificacion: rt.Calificacion,
-	}
-
-	ctx.JSON(200, map[string]interface{}{
-		"ok":   true,
-		"data": results,
-	})
-
+	ctx.Status(403)
 }

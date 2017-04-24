@@ -1186,3 +1186,21 @@ func UnfollowUser(userID, followID int64) (err error) {
 	}
 	return sess.Commit()
 }
+
+//
+/*Funciones de clasificacion de usuarios*/
+func AddPointsUser(userID int64, puntos int)(error){
+	_, err := x.Exec("UPDATE `user` SET puntos = puntos + ? WHERE id = ?", puntos , userID)
+
+	return err
+}
+
+func SubtractPointsUser(userID int64, puntos int)(error){
+	user, err := GetUserByID(userID)
+	if user.Puntos != 0 || user.Puntos-int64(puntos)>0{
+		_, err := x.Exec("UPDATE `user` SET puntos = puntos - ? WHERE id = ?", puntos , userID)
+		return err
+	}
+
+	return err
+}

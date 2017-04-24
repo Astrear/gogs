@@ -196,7 +196,7 @@ func CreatePost(ctx *context.Context, form auth.CreateRepoForm) {
 		}
 
 		//AGREGAR PUNTOS PARA CLASIFICACION
-		models.AddPointsUser(ctxUser.ID, 20)
+		models.AddPointsUser(ctxUser.ID, 10)
 		log.Trace("Repository created [%d]: %s/%s", repo.ID, ctxUser.Name, repo.Name)
 		ctx.Redirect(setting.AppSubUrl + "/" + ctxUser.Name + "/" + repo.Name)
 		return
@@ -299,13 +299,16 @@ func Action(ctx *context.Context) {
 	switch ctx.Params(":action") {
 	case "watch":
 		err = models.WatchRepo(ctx.User.ID, ctx.Repo.Repository.ID, true)
+		models.AddPointsUser(ctx.Repo.Repository.OwnerID, 2)
 	case "unwatch":
 		err = models.WatchRepo(ctx.User.ID, ctx.Repo.Repository.ID, false)
+		models.SubtractPointsUser(ctx.Repo.Repository.OwnerID, 2)
 	case "star":
 		err = models.StarRepo(ctx.User.ID, ctx.Repo.Repository.ID, true)
-		models.AddPointsUser(ctx.Repo.Repository.OwnerID, 10)
+		models.AddPointsUser(ctx.Repo.Repository.OwnerID, 2)
 	case "unstar":
 		err = models.StarRepo(ctx.User.ID, ctx.Repo.Repository.ID, false)
+		models.SubtractPointsUser(ctx.Repo.Repository.OwnerID, 2)
 	case "desc": // FIXME: this is not used
 		if !ctx.Repo.IsOwner() {
 			ctx.Error(404)

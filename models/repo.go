@@ -2542,6 +2542,12 @@ func getUserRate(userID int64, repoID int64) (*CalificacionRepo, bool) {
 	return rate, has
 }
 
+func GetUserRateRepo(userID int64, repoID int64) (*CalificacionRepo, bool) {
+	rate := new(CalificacionRepo)
+	has, _ := x.Where("user_id = ?", userID).And("repo_id = ?", repoID).Get(rate)
+	return rate, has
+}
+
 func (r *Repository) GetUserRate(userID int64) (*CalificacionRepo, bool) {
 	return getUserRate(userID, r.ID)
 }
@@ -2549,19 +2555,6 @@ func (r *Repository) GetUserRate(userID int64) (*CalificacionRepo, bool) {
 
 func UpdateRateUser(userID, repoID int64, calificacion int)(error){
 	_, err := x.Exec("UPDATE `calificacion_repo` SET calificacion = ? WHERE user_id = ? AND repo_id = ?", calificacion, userID, repoID)
-
-	return err
-}
-
-/*Funciones de clasificacion de usuarios*/
-func AddPointsUser(userID int64, puntos int)(error){
-	_, err := x.Exec("UPDATE `user` SET puntos = puntos + ? WHERE id = ?", puntos , userID)
-
-	return err
-}
-
-func SubtractPointsUser(userID int64, puntos int)(error){
-	_, err := x.Exec("UPDATE `user` SET puntos = puntos - ? WHERE id = ?", puntos , userID)
 
 	return err
 }

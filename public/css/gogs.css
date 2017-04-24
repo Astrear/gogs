@@ -2321,6 +2321,11 @@ footer .ui.language .menu {
 .ui.form .dropzone .dz-error-message {
   top: 140px;
 }
+
+.ui.form .dropzone .dz-error-mark svg g g {
+  fill : #D54753 !important;
+}
+
 .settings .content {
   margin-top: 2px;
 }

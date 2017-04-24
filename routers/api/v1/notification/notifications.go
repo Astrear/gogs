@@ -13,35 +13,37 @@ import (
 )
 
 func GetUserNotifications(ctx *context.APIContext) {
-	userID := ctx.User.ID
-	notifications, err := models.GetLastUserNotifications(userID)
-	if err != nil {
-		ctx.JSON(500, map[string]interface{}{
-			"ok":    false,
-			"error": err.Error(),
-		})
-		return
-	}
-
-	results := make([]*api.Notification, len(notifications))
-	for i := range notifications {
-		results[i] = &api.Notification{
-			ID:       notifications[i].ID,
-			UserID:   notifications[i].UserID,
-			Watched:   notifications[i].Watched, 
-			Description:   notifications[i].Description,
-			CreatedUnix:   notifications[i].CreatedUnix,
-			TimeSince: 	   base.RawTimeSince(time.Unix(notifications[i].CreatedUnix,0) ,"es-ES"),
+	if ctx.IsSigned{
+		userID := ctx.User.ID
+		notifications, err := models.GetLastUserNotifications(userID)
+		if err != nil {
+			ctx.JSON(500, map[string]interface{}{
+				"ok":    false,
+				"error": err.Error(),
+			})
+			return
 		}
+
+		results := make([]*api.Notification, len(notifications))
+		for i := range notifications {
+			results[i] = &api.Notification{
+				ID:       notifications[i].ID,
+				UserID:   notifications[i].UserID,
+				Watched:   notifications[i].Watched, 
+				Description:   notifications[i].Description,
+				CreatedUnix:   notifications[i].CreatedUnix,
+				TimeSince: 	   base.RawTimeSince(time.Unix(notifications[i].CreatedUnix,0) ,"es-ES"),
+			}
+		}
+
+		count:= models.CountUnWatchedUserNotifications(userID)
+
+		ctx.JSON(200, map[string]interface{}{
+			"ok":   true,
+			"data": results,
+			"count": count,
+		})
 	}
-
-	count:= models.CountUnWatchedUserNotifications(userID)
-
-	ctx.JSON(200, map[string]interface{}{
-		"ok":   true,
-		"data": results,
-		"count": count,
-	})
 }
 
 func UpdateWatchNotifications(ctx *context.APIContext) {
