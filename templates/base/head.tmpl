@@ -126,8 +126,9 @@
 											<div class="item">
 												<form id="form-search" action="{{$.RepoLink}}/search">
 													<div class="ui icon input" id="input-search">
-													  <input placeholder='{{$.i18n.Tr "search_this_repo"}}' type="text" id="inputQuery" name="q" required>
-													  <i class="circular search link icon"></i>
+													  <input placeholder='{{$.i18n.Tr "search_this_repo"}}' type="text" id="inputQuery" name="q" pattern="(.){6,}" title="La palabra clave no debe ser menor a 6 caracteres" required>
+													  <i class="circular search link icon" id="lupaSearch"></i>
+													  <input type="submit" id="submitBtnSearch" style="display:none;">
 													</div>
 												</form>
 											</div>
@@ -135,6 +136,9 @@
 												$(function(){
 													$("#form-search").submit(function(event) {
 														$("#input-search").addClass('loading');
+													});
+													$("#lupaSearch").click(function(e) {
+														$("#submitBtnSearch").click();
 													});
 												})
 											</script>

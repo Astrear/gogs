@@ -63,11 +63,15 @@
 		</div>
 
 		<script type="text/javascript">
-			$('code').each(function (index, value) { 
+			function escapeRegExp(str) {
+  				return str.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&");
+			}
+
+			$('code').each(function (index, value) {
 				var texto = $(this).html();
 				var path = $(this).attr("data-path");
-				var nuevo = texto.replace(new RegExp(query, 'gi'), '<span style="background-color: yellow">'+query+'</span>');
-				nuevo = nuevo.substring(nuevo.indexOf(path) + path.length);
+				texto = texto.substring(texto.indexOf(path) + path.length);
+				var nuevo = texto.replace(new RegExp(escapeRegExp(query), 'gi'), '<span style="background-color: yellow">'+query+'</span>');
 				$(this).html(nuevo);
 			});
 			$('.file_link').each(function (index, value) {

@@ -53,9 +53,15 @@ var $List;
 
 $(function(){
 	$(document).ready(function($) {
-		$(".board").sortable({items: ".column:not(.excluded)"});
+		$(".board").sortable({
+			items: ".column:not(.excluded)",
+		});
 		$(".board > .list > .holder > form > .field" ).disableSelection();
-		$(".holder").sortable({items: ".card", connectWith: ".holder", cancel: ".disabled"});
+		$(".holder").sortable({
+			items: ".card", 
+			connectWith: ".holder", 
+			cancel: ".disabled",
+		});
 		$(".holder").disableSelection();
 
 		$(".new.task").click(function(){
@@ -190,6 +196,9 @@ $('#NewList').modal({
 			}, false)
 			
 			$(".column.disabled").before($NewList);
+			$(".board").sortable({
+				items: ".column:not(.excluded)",
+			});
 		})
 		.fail(function(data, textStatus, xhr) {
 			console.log(data);
@@ -199,6 +208,11 @@ $('#NewList').modal({
 	onHide: function(){
 		$("#NewListForm")[0].reset();
 	},
+});
+
+$("#NewListForm").submit(function(event){
+	event.preventDefault();
+	return false
 });
 
 $(".add.list").click(function(){
@@ -368,11 +382,15 @@ $( ".board" ).on( "sortupdate", function(event, ui){
 
 
 $(".holder").on('sortupdate', function(event, ui) {
-	var $Container 	= $(ui.item.context).closest(".list_");
-	var $LastIndex 	= $(ui.item.context).data("index");
-	var $Index 	 	= $(ui.item.context).index();
+	SortInsde(ui)
+});
 
-	if(ui.sender == null && $($Container).data("id") == $(ui.item.context).data("list")){
+function SortInsde($this) {
+	var $Container 	= $($this.item.context).closest(".list_");
+	var $LastIndex 	= $($this.item.context).data("index");
+	var $Index 	 	= $($this.item.context).index();
+
+	if($this.sender == null && $($Container).data("id") == $($this.item.context).data("list")){
 		if(($Index + $LastIndex) == ($($Container).find(".card").length + 1)){
 			$.each($($Container).find(".card"), function(index, element) {
 				MoveCard($(this));
@@ -392,32 +410,40 @@ $(".holder").on('sortupdate', function(event, ui) {
 			});
 		}
 	}
-});
+}
 
 $(".holder").on("sortreceive", function(event, ui) {
-	var $Sender  = $(ui.sender.context).closest(".list_");
-	var $Reciver = $(ui.item.context).closest(".list_");
+	SortAdd(ui)
+});
 
-	TransferCard($(".card[data-id=" + $(ui.item.context).data("id") + "]"), $($Reciver).data("id"));
+function SortAdd($this) {
+	var $Sender  = $($this.sender.context).closest(".list_");
+	var $Reciver = $($this.item.context).closest(".list_");
+
+	TransferCard($(".card[data-id=" + $($this.item.context).data("id") + "]"), $($Reciver).data("id"));
 
 	$.each($($Sender).find(".card"), function(index, element) {
-		if($(this).index() >= $(ui.item.context).data("index")){
+		if($(this).index() >= $($this.item.context).data("index")){
 			MoveCard($(this));
 		}
 	});
 
 	$.each($($Reciver).find(".card"), function(index, element) {
-		if($(this).index() >= $(ui.item.context).index()){
+		if($(this).index() >= $($this.item.context).index()){
 			MoveCard($(this));
 		}
 	});
-});
+}
 
 $(".holder").on("sort", function(event, ui){
-	if($(ui.item.context).hasClass("disabled")){
+	SortCancel(ui)
+});
+
+function SortCancel($this){
+	if($($this.item.context).hasClass("disabled")){
 		$(this).sortable("cancel");
 	}
-});
+}
 
 function MoveCard($this){
 	$.ajax({
@@ -463,6 +489,7 @@ function NewCard($this){
 	})
 	.done(function(data, textStatus, xhr) {
 		var $NewCard = $CardObject.clone(true);
+		$($NewCard).attr("data-id", data.ID);
 		$($NewCard).data("id", data.ID);
 		$($NewCard).data("list", data.List);
 		$($NewCard).data("index", data.Index);
@@ -497,6 +524,23 @@ function NewCard($this){
 		}, false);
 		$($this).find(".holder").append($NewCard);
 		$($this).find("textarea").val("");
+		$(".holder").sortable({
+			items: ".card", 
+			connectWith: ".holder", 
+			cancel: ".disabled",
+		});
+		$(".holder").on('sortupdate', function(event, ui) {
+			SortInsde(ui)
+		});
+
+
+		$(".holder").on("sortreceive", function(event, ui) {
+			SortAdd(ui)
+		});
+
+		$(".holder").on("sort", function(event, ui){
+			SortCancel(ui)
+		});
 	})
 	.fail(function(data, textStatus, xhr) {
 		console.log(data);

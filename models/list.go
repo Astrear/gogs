@@ -271,14 +271,6 @@ const (
 	CARD_STATE_PLANNED
 )
 
-type CardPriority int
-
-const (
-	CARD_PIORITY_NORMAL CardPriority = iota
-	CARD_PIORITY_HIGH
-	CARD_PIORITY_URGENT
-)
-
 type Card struct {
 	ID            int64  `xorm:"pk autoincr"`
 	ListID        int64  
@@ -286,8 +278,7 @@ type Card struct {
 	Assignee      *User  `xorm:"-"`
 	Description   string `xorm:"TEXT"`
 	Position	  int64  
-	State 		  CardState `xorm:"default 0"`
-	Priority 	  CardPriority `xorm:"default 0"`
+	State 		  CardState
 	Duration 	  int64
 	ActivatedUnix int64
 	CreatedUnix   int64
@@ -304,7 +295,6 @@ func (card *Card) APIFormat() *api.Card {
 		Index:    	card.Position,
 		Body:     	card.Description,
 		State:    	int(card.State),
-		Priority: 	int(card.Priority),
 		Duration: 	card.Duration,
 		Activated:	card.ActivatedUnix,
 	}
