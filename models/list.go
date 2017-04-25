@@ -271,6 +271,14 @@ const (
 	CARD_STATE_PLANNED
 )
 
+type CardPriority int
+
+const (
+	CARD_PIORITY_NORMAL CardPriority = iota
+	CARD_PIORITY_HIGH
+	CARD_PIORITY_URGENT
+)
+
 type Card struct {
 	ID            int64  `xorm:"pk autoincr"`
 	ListID        int64  
@@ -279,6 +287,7 @@ type Card struct {
 	Description   string `xorm:"TEXT"`
 	Position	  int64  
 	State 		  CardState
+	Priority 	  CardPriority
 	Duration 	  int64
 	ActivatedUnix int64
 	CreatedUnix   int64
