@@ -79,7 +79,7 @@ $(function(){
 			UpdateCardTimeLabel($(this));
 		});
 
-		//RefreshCardTime();
+		RefreshCardTime();
 
 		
 	});
