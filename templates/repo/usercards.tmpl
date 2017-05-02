@@ -1,0 +1,18 @@
+{{template "base/head" .}}
+<div class="repository commits">
+	{{template "repo/header" .}}
+	<div class="ui container">
+		<div class="ui top attached tabular menu">
+  			<a href="contributions"><div class="item" data-tab="first" id="tabContributions">Commits</div></a>
+  			<div class="active item" data-tab="second" id="tabUserCards">Tareas</div>
+		</div>
+		<div class="ui bottom attached active tab segment" data-tab="second">
+		</div>
+	</div>
+	<script type="text/javascript">
+		$("#tabContributions").click(function() {
+			window.location.href="contributions";
+		});
+	</script>
+</div>
+{{template "base/footer" .}}

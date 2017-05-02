@@ -1,0 +1,270 @@
+{{template "base/head" .}}
+<style type="text/css" media="screen">
+	
+	.grid.board{
+		overflow-x: auto;
+		flex: 0 1 auto;
+		flex-wrap: nowrap;
+		height: 85%;
+		min-height: 85%;
+	}
+
+	.full.height{
+		height: 100%;
+	}
+
+	.repository{
+		display: flex;
+		flex-flow: column;
+		flex-grow: 1;
+		padding-bottom: 0;
+		height: 87%;
+		max-height: 87%;
+	}
+
+	.hidden{
+		display: none;
+	}
+
+	.list.title{
+		max-width: 55%;
+	}
+
+	.ui.card .meta.duration{
+		font-size: 0.8rem;
+	}
+
+	.column.list_{
+		min-width: 325px;
+	}
+
+	.column.list_ > .holder{
+		min-height: 95%;
+		max-height: 95%;
+		overflow-y: auto;
+	}
+
+	.ui.red.card  > .button {
+		background: #F28396;
+	}
+
+	.ui.olive.card > .button {
+		background: #DDF0B8;
+	}
+
+	.ui.teal.card > .button {
+		background: #B5D8EC;
+	}
+
+	.card .content .description{
+		padding-top: 5px;
+		word-wrap: break-word;
+	}
+
+	.card .content .description p {
+		white-space: pre-line;
+	}
+
+	.ui.card > .extra, .ui.cards > .card > .extra{
+		font-size: 0.8em !important;
+	}
+
+
+</style>
+
+<div class="repository cardsUser">
+	{{template "repo/header" .}}
+	<div class="ui container">
+		<div class="ui top attached tabular menu">
+  			<a href="contributions"><div class="item" data-tab="first" id="tabContributions">Commits</div></a>
+  			<div class="active item" data-tab="second" id="tabUserCards">Tareas</div>
+		</div>
+		<div class="ui bottom attached active tab segment" data-tab="second">
+			<div class="ui segment">
+			<span>
+				Mostrar tarjetas del usuario:
+			  	<div class="ui inline dropdown">
+			    	<div class="text">
+			      		<img class="ui avatar image" src="{{.Repository.Owner.RelAvatarLink}}">
+			      		{{.Repository.Owner.FullName}}
+			    	</div>
+			    	<i class="dropdown icon"></i>
+				    <div class="menu">
+				    	<div class="item itemUser" data-id="{{.Repository.Owner.ID}}" data-repoID="{{.Repository.ID}}">
+				      		<img class="ui avatar image" src="{{.Repository.Owner.RelAvatarLink}}">
+				      		{{.Repository.Owner.FullName}}
+				    	</div>
+				    	{{range .Collaborators}}
+				    		<div class="item itemUser" data-id="{{.ID}}" data-repoID="{{$.Repository.ID}}">
+					        	<img class="ui avatar image" src="{{.AvatarLink}}">
+					        	{{.FullName}}
+				      		</div>
+				    	{{end}}
+				    </div>
+			  	</div>
+			</span>
+			</div>
+			<div class="ui segment" id="segmentParentCardsUser">
+				{{if .CardsOwner}}
+					<div class="ui cards" id="segmentCardsUser" style="padding-left: 7.8%;">
+						{{range .CardsOwner}}
+							<li class="ui card"  data-state="{{.State}}" data-priority="{{.Priority}}" data-duration="{{.Duration}}" data-activated="{{.ActivatedUnix}}">
+								{{if not $.Repository.IsClosed}}
+								<div class="ui top attached button"></div>
+								{{end}}
+								<div class="content">
+									<div class="left floated author assignee">
+										{{if .AssigneeID}}
+										<img class="ui avatar image" src="{{.Assignee.AvatarLink}}">{{.Assignee.Name}}
+										{{end}}
+									</div>
+									<div class="right floated meta time duration"></div>
+									<div class="description">
+										<p>{{.Description}}</p>
+									</div>
+								</div>
+								{{if gt .Priority 0}}
+								<div class="extra content">
+								    <span class="left floated priority"></span>
+							  	</div>
+							  	{{end}}
+							</li>
+						{{end}}
+					</div>
+				{{else}}
+					<div class="ui center aligned segment">
+						<i class="big delete calendar icon"></i>
+						<br>
+						<h3>{{.i18n.Tr "nocardsuser"}}</h3>
+					</div>
+				{{end}}
+			</div>
+		</div>
+	</div>
+
+	<script type="text/javascript">
+
+		var $Colors 	= ["red", "olive", "teal", "grey"];
+		var $Priority 	= ["", "Alta", "Urgente"];
+		var $PColors 	= ["", "purple", "orange"];
+		$RepoInitTime  = {{$.Repository.InitUnix}}
+		$RepoLimitTime = {{$.Repository.EndUnix}}
+
+		$("#tabContributions").click(function() {
+			window.location.href="contributions";
+		});
+
+		$(".card").each(function(index, element){
+			var $State = $(this).data("state");
+			var $CPriority = $(this).data("priority");
+			$(this).addClass($Colors[$State]);
+			if($CPriority > 0) {
+				$(this).find(".priority").html("<a class='ui "+ $PColors[$CPriority] +" empty circular label'></a>&nbsp;"+ $Priority[$CPriority] +"</span>");
+			}
+			UpdateCardTimeLabel($(this));
+			ValidateDuration($(this));
+		});
+
+		function ValidateDuration($this){
+			if( ($RepoInitTime * 1000) + ($($this).data("duration") ) > ($RepoLimitTime * 1000) ) {
+				if($($this).find(".outdate").length == 0) {
+					if($($this).find(".extra.content").length) {
+						$($this).find(".extra.content").append("<span class='right floated icon outdate'><i class='warning sign icon' />Tarjeta Fuera de Limite</span>");
+					} else {
+						$($this).append("<div class='extra content'><span class='right floated icon outdate'><i class='warning sign icon' />Tarjeta Fuera de Limite</span></div>");
+					}
+				}
+			} else {
+				if($($this).find(".priority").length) {
+					$($this).find(".outdate").remove();
+				} else {
+					$($this).find(".extra.content").remove();
+				}
+			}
+		}
+
+		function UpdateCardTimeLabel($this){
+			switch ($($this).data("state")) {
+				case 0:
+				$($this).find(".meta.duration").text("Tarjeta Expirada");
+				break;
+				case 1:
+				if($($this).data("duration") > 0){
+					var $Time = GetRemaningTime($($this).data("duration"), $($this).data("activated"));
+					if(($Time.Days + $Time.Hours + $Time.Minutes) > 0) {
+						FormatTimeLabel($($this), $Time);
+					} else {
+						ExpireCard($this);
+					}
+				} else {
+					$($this).find(".meta.duration").text("");
+				}
+				break;
+				case 2:
+				$($this).addClass("disabled");
+				$($this).find(".meta.duration").text("Tarjeta Completada");
+				break;
+				default:
+				if($($this).data("duration") > 0){
+					var $Units = GetTimeUnits($($this).data("duration") / 1000);
+					FormatTimeLabel($($this), $Units);
+				}
+				break;
+			}
+		}
+
+		function FormatTimeLabel($this, Time) {
+			var Label = ((Time.Days + Time.Hours + Time.Minutes) > 1) ? "Restan " : "Resta ";
+			if(Time.Days > 0) {
+				Label = (Time.Days > 1) ? Label + Time.Days + " Dias" : Label + Time.Days + " Dia";
+				if(Time.Hours > 0 || Time.Minutes > 0){
+					Label = (Time.Hours > 0 && Time.Minutes > 0) ? Label + ", " : Label + " y ";
+				}
+			}
+
+			if(Time.Hours > 0) {
+				Label +=  Time.Hours + "h";
+				if(Time.Minutes > 0){
+					Label += " y ";
+				}
+			}
+
+			if(Time.Minutes > 0) {
+				Label += Time.Minutes + "m";
+			}
+			$($this).find(".meta.duration").text(Label);
+		}
+
+		function GetTime($Days, $Hours, $Minutes){
+			return (($Days * 86400) + ($Hours * 3600) + ($Minutes * 60)) * 1000;
+		}
+
+		function GetTimeUnits($Time) {
+					var $Units = {};
+
+			// calculate (and subtract) whole days
+			var $Days = Math.floor($Time / 86400);
+			$Units.Days = $Days;
+			$Time -= $Days * 86400;
+
+			// calculate (and subtract) whole hours
+			var $Hours = Math.floor($Time / 3600) % 24;
+			$Units.Hours = $Hours;
+			$Time -= $Hours * 3600;
+
+			// calculate (and subtract) whole minutes
+			var $Minutes = Math.floor($Time / 60) % 60;
+			$Units.Minutes = $Minutes;
+			$Time -= $Minutes * 60;
+
+			return $Units;
+		}
+
+		function GetRemaningTime($Time, $ActivatedDate){
+			var $LimitDate 	= ($ActivatedDate * 1000) + $Time;
+			var $Seconds 	= $LimitDate > Date.now() ? ($LimitDate - Date.now()) / 1000 : 0;
+			return GetTimeUnits($Seconds);
+		}	
+	</script>
+</div>
+{{template "base/footer" .}}
