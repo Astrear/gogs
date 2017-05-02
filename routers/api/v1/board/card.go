@@ -18,6 +18,7 @@ import (
 func CreateCard(ctx *context.APIContext, form api.CreateCardOption) {
 
 	card := &models.Card{
+		RepoID: 		ctx.Repo.Repository.ID,
 		ListID:   		form.List,
 		Position: 		form.Index,
 		Description:    form.Body,
@@ -54,6 +55,7 @@ func EditCard(ctx *context.APIContext, form api.EditCardOption) {
 			if len(form.Body) > 0 {
 				card.Description = form.Body
 			}
+			card.Priority = form.Priority
 			if len(form.Assignee) > 0 && (card.Assignee == nil || card.Assignee.LowerName != strings.ToLower(form.Assignee)) {
 				assignee, err := models.GetUserByName(form.Assignee)
 				if err != nil {
@@ -68,14 +70,14 @@ func EditCard(ctx *context.APIContext, form api.EditCardOption) {
 				repoName := ctx.Repo.Repository.Owner.Name + "/" + ctx.Repo.Repository.Name
 
 				if card.Assignee != nil && card.Assignee.LowerName != strings.ToLower(form.Assignee) {
-					if err := models.CreateNotification(card.AssigneeID, "Se te ha reemplazado como reponsable de una tarjeta en " + repoName, 9); err != nil{
+					if err := models.CreateNotification(card.AssigneeID, "Se te ha reemplazado como reponsable de una tarjeta en " + repoName, 9, ctx.Repo.Repository.HTMLURL()); err != nil{
 						fmt.Errorf("Error at CreateNotification in EditCard: %v", err)
 					}else{
 						models.SendEmailCardReplaced(card.AssigneeID, repoName, ctx.Repo.Repository.HTMLURL(), card.Description)
 					}
 				}
 
-				if err := models.CreateNotification(assignee.ID, "Se te ha asignado una tarjeta en " + repoName, 8); err != nil{
+				if err := models.CreateNotification(assignee.ID, "Se te ha asignado una tarjeta en " + repoName, 8, ctx.Repo.Repository.HTMLURL()); err != nil{
 					fmt.Errorf("Error at CreateNotification in EditCard: %v", err)
 				}
 				models.SendEmailCardAsigned(assignee.ID, repoName, ctx.Repo.Repository.HTMLURL(), card.Description)
@@ -274,14 +276,14 @@ func ExpireCard(ctx *context.APIContext) {
 	//SEND NOTIFICATION
 	repoName := ctx.Repo.Repository.Owner.Name + "/" + ctx.Repo.Repository.Name;
 	if card.HasAssignee() {
-		if err := models.CreateNotification(card.AssigneeID, "Ha caducado una de tus tarjetas en " + repoName, 11); err != nil{
+		if err := models.CreateNotification(card.AssigneeID, "Ha caducado una de tus tarjetas en " + repoName, 11, ctx.Repo.Repository.HTMLURL()); err != nil{
 			fmt.Errorf("Error at CreateNotification in ExpireCard: %v", err)
 		}else{
 			models.SendEmailCardExpired(card.AssigneeID, repoName, ctx.Repo.Repository.HTMLURL(), card.Description)
 		}
 	}
 
-	if err := models.CreateNotification(ctx.Repo.Owner.ID, "Ha caducado una tarjeta en " + ctx.Repo.Repository.Name, 11); err != nil{
+	if err := models.CreateNotification(ctx.Repo.Owner.ID, "Ha caducado una tarjeta en " + ctx.Repo.Repository.Name, 11, ctx.Repo.Repository.HTMLURL()); err != nil{
 		fmt.Errorf("Error at CreateNotification in ExpireCard: %v", err)
 	}
 	//SEND NOTIFICATION
@@ -300,14 +302,14 @@ func DeleteCard(ctx *context.APIContext) {
 
 		//SEND NOTIFICATION
 		repoName := ctx.Repo.Repository.Owner.Name + "/" + ctx.Repo.Repository.Name;
-		if err := models.CreateNotification(card.AssigneeID, "Se ha eliminado una de tus tarjetas de " + repoName, 10); err != nil{
+		if err := models.CreateNotification(card.AssigneeID, "Se ha eliminado una de tus tarjetas de " + repoName, 10, ctx.Repo.Repository.HTMLURL()); err != nil{
 			fmt.Errorf("Error at CreateNotification in DeleteCard: %v", err)
 		}else{
 			//NOTIFICACION POR CORREO
 			models.SendEmailCardDeleted(card.AssigneeID, repoName, ctx.Repo.Repository.HTMLURL(), card.Description)
 		}
 
-		if err := models.CreateNotification(ctx.Repo.Repository.OwnerID, "Se ha eliminado una tarjeta de " + ctx.Repo.Repository.Name, 10); err != nil{
+		if err := models.CreateNotification(ctx.Repo.Repository.OwnerID, "Se ha eliminado una tarjeta de " + ctx.Repo.Repository.Name, 10, ctx.Repo.Repository.HTMLURL()); err != nil{
 			fmt.Errorf("Error at CreateNotification in DeleteCard: %v", err)
 		}
 		//SEND NOTIFICATION
@@ -321,4 +323,28 @@ func DeleteCard(ctx *context.APIContext) {
 		return
 	}
 	ctx.Status(403)
+}
+
+func GetCardsUser(ctx *context.APIContext){
+	userID:= ctx.ParamsInt64(":userID")
+	repoID:= ctx.ParamsInt64(":repoID")
+
+	cardsUser, err := models.GetCardsbyUser(userID, repoID)
+	if err != nil{
+		ctx.JSON(500, map[string]interface{}{
+			"ok":    false,
+			"error": err.Error(),
+		})
+		return
+	}
+
+	results := make([]*api.Card, len(cardsUser))
+	for i := range cardsUser {
+		results[i] = cardsUser[i].APIFormat()
+	}
+
+	ctx.JSON(200, map[string]interface{}{
+		"ok":   true,
+		"data": results,
+	})
 }

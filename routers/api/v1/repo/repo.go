@@ -327,7 +327,7 @@ func EvaluateRepo(ctx *context.APIContext) {
 			models.AddPointsUser(repo.OwnerID, 5)
 			//SEND NOTIFICATION
 			message := u.Name + " ha calificado positivamente tu repositorio " + repo.Name
-			errNotification := models.CreateNotification(repo.OwnerID, message, 3)
+			errNotification := models.CreateNotification(repo.OwnerID, message, 3, u.HomeLink())
 			if errNotification != nil{
 				fmt.Errorf("Error at CreateNotification: %v", errNotification)
 			}
@@ -337,7 +337,7 @@ func EvaluateRepo(ctx *context.APIContext) {
 			models.SubtractPointsUser(repo.OwnerID, 5)
 			//SEND NOTIFICATION
 			message := u.Name + " ha calificado negativamente tu repositorio " + repo.Name
-			errNotification := models.CreateNotification(repo.OwnerID, message, 4)
+			errNotification := models.CreateNotification(repo.OwnerID, message, 4, u.HomeLink())
 			if errNotification != nil{
 				fmt.Errorf("Error at CreateNotification: %v", errNotification)
 			}
@@ -346,7 +346,7 @@ func EvaluateRepo(ctx *context.APIContext) {
 		if(calificacion== 7 || calificacion == 6){
 			//SEND NOTIFICATION
 			message := u.Name + " ha calificado tu repositorio " + repo.Name
-			errNotification := models.CreateNotification(repo.OwnerID, message, 5)
+			errNotification := models.CreateNotification(repo.OwnerID, message, 5, u.HomeLink())
 			if errNotification != nil{
 				fmt.Errorf("Error at CreateNotification: %v", errNotification)
 			}

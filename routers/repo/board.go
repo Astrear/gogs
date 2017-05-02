@@ -17,6 +17,7 @@ import (
 
 const (
 	BOARD    base.TplName = "repo/board/list"
+	CARDSUSER base.TplName = "repo/cardsuser"
 )
 
 func Board(ctx *context.Context) {
@@ -61,4 +62,22 @@ func isInSlice(item string, slice []string) bool {
 		}
 	}
 	return false
+}
+
+func CardsByUser(ctx *context.Context) {
+	ctx.Data["PageIsContributions"] = true
+	collaborators, err := ctx.Repo.Repository.GetCollaborators()
+	if err != nil {
+		fmt.Println("GetCollaborators: %v", err)
+	}
+
+	cardsOwner,err := models.GetCardsbyUser(ctx.Repo.Repository.OwnerID, ctx.Repo.Repository.ID)
+	if err != nil {
+		fmt.Println("GetCardsbyUser: %v", err)
+	}
+
+	ctx.Data["Collaborators"] = collaborators
+	ctx.Data["CardsOwner"] = cardsOwner
+	
+	ctx.HTML(200, CARDSUSER)
 }

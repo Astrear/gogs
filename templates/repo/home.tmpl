@@ -79,9 +79,41 @@
 								</div>
 							</div>
 							{{end}}
+
+							{{if gt .Repository.InitUnix 0}}
+							<div class="item">
+								<i class="road icon"></i>
+								<div class="content">
+									<div class="header">Fecha de Inicio del Proyecto</div>
+									<div class="description start"></div>
+								</div>
+							</div>
+							{{end}}
+
+							{{if gt .Repository.EndUnix 0}}
+							<div class="item">
+								<i class="wait icon"></i>
+								<div class="content">
+									<div class="header">Fecha de Término del Proyecto</div>
+									<div class="description end"></div>
+								</div>
+							</div>
+							{{end}}
 						</div>
 					</div>
 				</div>
+
+				<script type="text/javascript">
+					$(function(){
+						if($(".description.start").length){
+							$(".description.start").html("<span> "+ new Date({{.Repository.InitUnix}} * 1000).toLocaleDateString() + "</span>")
+						}
+
+						if($(".description.end").length){
+							$(".description.end").html("<span> "+ new Date({{.Repository.EndUnix}} * 1000).toLocaleDateString() + "</span>")
+						}
+					});
+				</script>
 				
 				<div class="card">
 					<div class="content">
@@ -160,7 +192,7 @@
 			});
 		</script>
 
-		<div class="ui grid">
+		<div class="ui fluid  grid">
 			{{if not .Repository.IsMirror}}
 			<div class="row">
 			  	<div class="column">
@@ -193,7 +225,34 @@
 				</div>
 			</div>
 			{{end}}
-		  	<div class=" dluid row">
+			{{if .Repository.HasCards}}
+			<div class="row">
+			<div class="fluid column">
+				<div class="ui indicating progress" data-value="{{.Repository.GetNUmberOfCardsCompleted}}" data-total="{{.Repository.GetNUmberOfCards}}">
+				  <div class="bar">
+				    <div class="progress"></div>
+				  </div>
+				  <div class="label">Avance del Proyecto</div>
+				</div>
+			</div>
+			</div>
+			<script type="text/javascript">
+				$(function(){
+					$('.ui.progress')
+					  .progress({
+					    total    : {{.Repository.GetNUmberOfCards}},
+					    label 	 : 'ratio',
+					    text     : {
+					      ratio   : '{percent}% del proyecto completado',
+					      active  : '{value} de {total} tareas completadas',
+					      success : 'Proyecto Completado!',
+
+					    }
+					  });
+				});
+			</script>
+			{{end}}
+		  	<div class="row">
 			    <div class="left floated left aligned column">
 				    	<div class="ui mini horizontal list">
 						  	{{range .HTags}}
@@ -242,6 +301,9 @@
 						{{end}}
 					{{end}}
 				</div>
+			</div>
+			<div class="right fitted item">
+				<div class="fb-share-button" data-href="{{.Respository.RepoLink}}" data-layout="button_count" data-size="small" data-mobile-iframe="true"><a class="fb-xfbml-parse-ignore" target="_blank" href="https://www.facebook.com/sharer/sharer.php?u={{.RepoLink}}&amp;src=sdkpreparse">Compartir</a></div>
 			</div>
 			<div class="right fitted item">
 				{{if .Repository.CanEnableEditor}}

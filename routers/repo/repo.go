@@ -10,6 +10,7 @@ import (
 	"path"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/Unknwon/com"
 
@@ -166,6 +167,10 @@ func CreatePost(ctx *context.Context, form auth.CreateRepoForm) {
 		return
 	}
 
+	const shortForm = "01/02/2006"
+	InitTime, _ := time.Parse(shortForm, form.Init)
+	EndTime, _  := time.Parse(shortForm, form.End)
+
 	repo, err := models.CreateRepository(ctxUser, models.CreateRepoOptions{
 		Name:        form.RepoName,
 		Description: form.Description,
@@ -179,7 +184,10 @@ func CreatePost(ctx *context.Context, form auth.CreateRepoForm) {
 		GroupID:     form.Group,
 		ProfessorID: form.Professor,
 		SubjectID:   form.Subject,
+		InitUnix: 	 InitTime.Unix(),
+		EndUnix: 	 EndTime.Unix(),
 	})
+
 	if err == nil {
 
 		arr_tags := strings.Split(form.Tags, ",")

@@ -55,7 +55,7 @@
 					{{.i18n.Tr "repo.pulls.has_pull_request" $.RepoLink $.RepoRelPath .PullRequest.Index | Safe}}
 				</div>
 			{{else}}
-				{{template "repo/issue/new_form" .}}
+				
 				{{template "repo/commits_table" .}}
 				{{template "repo/diff/box" .}}
 			{{end}}

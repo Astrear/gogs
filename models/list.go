@@ -271,14 +271,18 @@ const (
 	CARD_STATE_PLANNED
 )
 
+
+
 type Card struct {
 	ID            int64  `xorm:"pk autoincr"`
+	RepoID 		  int64
 	ListID        int64  
 	AssigneeID    int64  
 	Assignee      *User  `xorm:"-"`
 	Description   string `xorm:"TEXT"`
 	Position	  int64  
-	State 		  CardState
+	State 		  CardState `xorm:"Default 0"`
+	Priority 	  int 	 `xorm:"Default 0"`
 	Duration 	  int64
 	ActivatedUnix int64
 	CreatedUnix   int64
@@ -295,6 +299,7 @@ func (card *Card) APIFormat() *api.Card {
 		Index:    	card.Position,
 		Body:     	card.Description,
 		State:    	int(card.State),
+		Priority: 	card.Priority,
 		Duration: 	card.Duration,
 		Activated:	card.ActivatedUnix,
 	}
@@ -584,4 +589,47 @@ func (u *User) CanEditCard(id int64) bool {
 	}
 
 	return !card.HasAssignee() || card.AssigneeID == u.ID
+}
+
+func (repo *Repository) getNUmberOfCards() (int64, error) {
+	return x.Count(&Card{RepoID: repo.ID})
+}
+
+// GetRepositoryCount returns the total number of repositories of user.
+func (repo *Repository) GetNUmberOfCards() (int64, error) {
+	return repo.getNUmberOfCards()
+}
+
+func (repo *Repository) getNUmberOfCardsCompleted() (int64, error) {
+	return x.Count(&Card{RepoID: repo.ID, State: CARD_STATE_CLOSED})
+}
+
+// GetRepositoryCount returns the total number of repositories of user.
+func (repo *Repository) GetNUmberOfCardsCompleted() (int64, error) {
+	return repo.getNUmberOfCardsCompleted()
+}
+
+func (repo *Repository) hasCards() bool {
+	cards, err := repo.GetNUmberOfCards()
+	if err != nil {
+		return false
+	}
+
+	return cards > 0
+}
+
+// GetRepositoryCount returns the total number of repositories of user.
+func (repo *Repository) HasCards() (int64, error) {
+	return repo.getNUmberOfCardsCompleted()
+}
+
+func GetCardsbyUser(userID,repoID int64) ([]*Card, error) {
+	cards := make([]*Card, 0, 5)
+	err:= x.Where("assignee_id=?", userID).And("repo_id=?",repoID).Asc("id").Find(&cards)
+
+	for _, card := range cards {
+		card.LoadAttributes()
+	}
+
+	return cards, err
 }

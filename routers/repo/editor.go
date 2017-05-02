@@ -264,6 +264,42 @@ func editFilePost(ctx *context.Context, form auth.EditRepoFileForm, isNewFile bo
 		return
 	}
 
+	//SEND NOTIFICATION
+	messageNotification := ""
+	typeNotification := 13
+
+	if isNewFile {
+		messageNotification = ctx.User.Name + " ha creado un archivo en " + ctx.Repo.Repository.Name
+	} else {
+		messageNotification = ctx.User.Name + " ha editado un archivo en " + ctx.Repo.Repository.Name
+		typeNotification = 14
+	}
+
+	gitRepo, err := git.OpenRepository(ctx.Repo.Repository.RepoPath())
+	if err != nil {
+		log.Error(4, "OpenRepository: %v", err)
+	}
+	latestCommit, _ := gitRepo.GetBranchCommit(branchName)
+	link := ctx.Repo.RepoLink + "/commit/" + latestCommit.ID.String()
+
+	collaboratos, _ := ctx.Repo.Repository.GetCollaborators()
+	for _, c := range collaboratos {
+		if c.User.ID != ctx.User.ID{
+			errNotification := models.CreateNotification(c.User.ID, messageNotification, typeNotification, link)
+			if errNotification != nil{
+				fmt.Errorf("Error at editFile: %v", errNotification)
+			}
+		}
+	}
+	
+	if ctx.User.ID != ctx.Repo.Repository.OwnerID{
+		errNotification := models.CreateNotification(ctx.Repo.Repository.OwnerID, messageNotification, typeNotification, link)
+		if errNotification != nil{
+			fmt.Errorf("Error at editFile: %v", errNotification)
+		}
+	}
+	//SEND NOTIFICATION
+
 	ctx.Redirect(ctx.Repo.RepoLink + "/src/" + branchName + "/" + form.TreePath)
 }
 
@@ -357,11 +393,39 @@ func DeleteFilePost(ctx *context.Context, form auth.DeleteRepoFileForm) {
 		OldBranch:    oldBranchName,
 		NewBranch:    branchName,
 		TreePath:     ctx.Repo.TreePath,
-		Message:      message,
+		Message:      message,	
 	}); err != nil {
 		ctx.Handle(500, "DeleteRepoFile", err)
 		return
 	}
+
+	//SEND NOTIFICATION
+	messageNotification := ctx.User.Name + " ha eliminado un archivo en " + ctx.Repo.Repository.Name
+	
+	gitRepo, err := git.OpenRepository(ctx.Repo.Repository.RepoPath())
+	if err != nil {
+		log.Error(4, "OpenRepository: %v", err)
+	}
+	latestCommit, _ := gitRepo.GetBranchCommit(branchName)
+	link := ctx.Repo.RepoLink + "/commit/" + latestCommit.ID.String()
+
+	collaboratos, _ := ctx.Repo.Repository.GetCollaborators()
+	for _, c := range collaboratos {
+		if c.User.ID != ctx.User.ID{
+			errNotification := models.CreateNotification(c.User.ID, messageNotification, 15, link)
+			if errNotification != nil{
+				fmt.Errorf("Error at DeleteFile: %v", errNotification)
+			}
+		}
+	}
+
+	if ctx.User.ID != ctx.Repo.Repository.OwnerID{
+		errNotification := models.CreateNotification(ctx.Repo.Repository.OwnerID, messageNotification, 15, link)
+		if errNotification != nil{
+			fmt.Errorf("Error at DeleteFile: %v", errNotification)
+		}
+	}
+	//SEND NOTIFICATION
 
 	ctx.Flash.Success(ctx.Tr("repo.editor.file_delete_success", ctx.Repo.TreePath))
 	ctx.Redirect(ctx.Repo.RepoLink + "/src/" + branchName)
@@ -478,6 +542,34 @@ func UploadFilePost(ctx *context.Context, form auth.UploadRepoFileForm) {
 		ctx.RenderWithErr(ctx.Tr("repo.editor.unable_to_upload_files", form.TreePath, err), UPLOAD_FILE, &form)
 		return
 	}
+
+	//SEND NOTIFICATION
+	messageNotification := ctx.User.Name + " ha agregado archivos en " + ctx.Repo.Repository.Name
+	
+	gitRepo, err := git.OpenRepository(ctx.Repo.Repository.RepoPath())
+	if err != nil {
+		log.Error(4, "OpenRepository: %v", err)
+	}
+	latestCommit, _ := gitRepo.GetBranchCommit(branchName)
+	link := ctx.Repo.RepoLink + "/commit/" + latestCommit.ID.String()
+
+	collaboratos, _ := ctx.Repo.Repository.GetCollaborators()
+	for _, c := range collaboratos {
+		if c.User.ID != ctx.User.ID{
+			errNotification := models.CreateNotification(c.User.ID, messageNotification, 16, link)
+			if errNotification != nil{
+				fmt.Errorf("Error at UpdateFile: %v", errNotification)
+			}
+		}
+	}
+
+	if ctx.User.ID != ctx.Repo.Repository.OwnerID{
+		errNotification := models.CreateNotification(ctx.Repo.Repository.OwnerID, messageNotification, 16, link)
+		if errNotification != nil{
+			fmt.Errorf("Error at UpdateFile: %v", errNotification)
+		}
+	}
+	//SEND NOTIFICATION
 
 	ctx.Redirect(ctx.Repo.RepoLink + "/src/" + branchName + "/" + form.TreePath)
 }

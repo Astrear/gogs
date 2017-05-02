@@ -1,4 +1,15 @@
 {{template "base/head" .}}
+<script src="{{AppSubUrl}}/js/jquery-ui.js"></script>
+<link rel="stylesheet" type="text/css" href="https://code.jquery.com/ui/1.12.0/themes/smoothness/jquery-ui.css">
+<script type="text/javascript">
+	$( function(){
+		$("#initdate").datepicker();
+		$("#enddate").datepicker();
+		console.log({{.Repository.InitUnix}}, {{.Repository.EndUnix}})
+		$("#initdate").datepicker("setDate", new Date({{.Repository.InitUnix}} * 1000 + 86400000));
+		$("#enddate").datepicker("setDate", new Date({{.Repository.EndUnix}} * 1000 + 86400000));
+	});
+</script>
 <div class="repository settings options">
 	{{template "repo/header" .}}
 	<div class="ui container">
@@ -6,11 +17,14 @@
 			{{template "repo/settings/navbar" .}}
 			<div class="twelve wide column content">
 				{{template "base/alert" .}}
+				<div class="ui negative message" id="message_error_dates" style="display: none;">
+					<p>La Fecha de Inicio del Proyecto debe ser menor a la Fecha de Término del Proyecto</p>
+				</div>
 				<h4 class="ui top attached header">
 					{{.i18n.Tr "repo.settings.basic_settings"}}
 				</h4>
 				<div class="ui attached segment">
-					<form class="ui form" action="{{.Link}}" method="post">
+					<form class="ui form" action="{{.Link}}" method="post" id="editForm">
 						{{.CsrfTokenHtml}}
 						<input type="hidden" name="action" value="update">
 						<div class="required field {{if .Err_RepoName}}error{{end}}">
@@ -109,11 +123,48 @@
 							</div>
 						</div>
 
+						<div class="field" id="div_initdate">
+							<label>Fecha de Inicio de Proyecto</label>
+							<div class="ui labeled input">
+								<div class="ui label">
+									<i class="road icon"></i>
+								</div>
+								<input placeholder="Fecha de Inicio" name="init" type="text" id="initdate">
+							</div>
+						</div>
+
+						<div class="field" id="div_enddate">
+							<label>Fecha de Término de Proyecto</label>
+							<div class="ui labeled input">
+								<div class="ui label">
+									<i class="wait icon"></i>
+								</div>
+								<input placeholder="Fecha de Término" name="end" type="text" id="enddate">
+							</div>
+						</div>
+
 						<div class="field">
 							<button class="ui green button">{{$.i18n.Tr "repo.settings.update_settings"}}</button>
 						</div>
 					</form>
 				</div>
+				<script type="text/javascript">
+					$("#editForm").submit(function( event ) {
+						var initDate = $("#initdate").val();
+						var endDate = $("#enddate").val();
+
+						if(new Date(initDate) >= new Date(endDate)){
+							$("#div_initdate").addClass( "error" );
+							$("#div_enddate").addClass( "error" );
+							$("#message_error_dates").show();
+							event.preventDefault();
+						}else{
+							$("#div_initdate").removeClass("error");
+							$("#div_enddate").removeClass("error");
+							$("#message_error_dates").hide();
+						}
+					});
+				</script>
 
 				{{if .Repository.IsMirror}}
 					<h4 class="ui top attached header">

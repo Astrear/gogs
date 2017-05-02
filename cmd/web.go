@@ -648,6 +648,7 @@ func runWeb(ctx *cli.Context) error {
 			m.Get("/releases", repo.Releases)
 			m.Get("/search", repo.ThisRepoSearch)
 			m.Get("/contributions", repo.Contributions)
+			m.Get("/cardsuser", repo.CardsByUser)
 			m.Get("/^:type(issues|pulls)$", repo.RetrieveLabels, repo.Issues)
 			m.Get("/^:type(issues|pulls)$/:index", repo.ViewIssue)
 			m.Get("/labels/", repo.RetrieveLabels, repo.Labels)

@@ -183,6 +183,11 @@ func SettingsPost(ctx *context.Context, form auth.RepoSettingForm) {
 		repo.SubjectID = form.Subject
 		repo.SemesterID = form.Semester
 		repo.GroupID = form.Group
+		const shortForm = "01/02/2006"
+		InitTime, _ := time.Parse(shortForm, form.Init)
+		EndTime, _  := time.Parse(shortForm, form.End)
+		repo.InitUnix 	= InitTime.Unix()
+		repo.EndUnix 	= EndTime.Unix()
 		// FIN METADATOS ESCOLARES
 
 		// Visibility of forked repository is forced sync with base repository.
@@ -554,7 +559,7 @@ func CollaborationPost(ctx *context.Context) {
 		//SEND NOTIFICATION
 		repoName := ctx.Repo.Repository.Name;
 		message := ctx.User.Name + " te añadio como colaborador a " + repoName
-		errNotification := models.CreateNotification(u.ID, message, 1)
+		errNotification := models.CreateNotification(u.ID, message, 1, ctx.Repo.Repository.HTMLURL())
 		if errNotification != nil{
 			fmt.Errorf("Error at CreateNotification: %v", errNotification)
 		}
@@ -601,7 +606,7 @@ func LeaveRepo(ctx *context.Context){
 			//SEND NOTIFICATION
 			repoName := ctx.Repo.Repository.Name;
 			message := u.Name + " ha abandonado el repositorio " + repoName
-			errNotification := models.CreateNotification(ctx.Repo.Owner.ID, message, 2)
+			errNotification := models.CreateNotification(ctx.Repo.Owner.ID, message, 2, ctx.Repo.Repository.HTMLURL())
 			if errNotification != nil{
 				fmt.Errorf("Error at CreateNotification: %v", errNotification)
 			}
@@ -619,7 +624,7 @@ func CloseRepo(ctx *context.Context){
 	for _, c := range collaboratos {
 		repo.ChangeCollaborationAccessMode(c.User.ID, models.ACCESS_MODE_READ)
 		message := "Se ha cerrado el repositorio " + repo.Owner.Name + "/" + repo.Name +" donde colaboraba"
-		errNotification := models.CreateNotification(c.User.ID, message, 6)
+		errNotification := models.CreateNotification(c.User.ID, message, 6, ctx.Repo.Repository.HTMLURL())
 		if errNotification != nil{
 			fmt.Errorf("Error at CreateNotification in CloseRepo: %v", errNotification)
 		}
@@ -639,7 +644,7 @@ func OpenRepo(ctx *context.Context){
 			repo.ChangeCollaborationAccessMode(c.User.ID, models.ACCESS_MODE_WRITE)
 		}
 		message := "Se ha re-abierto el repositorio " + repo.Owner.Name + "/" + repo.Name +" donde colaboraba"
-		errNotification := models.CreateNotification(c.User.ID, message, 7)
+		errNotification := models.CreateNotification(c.User.ID, message, 7, ctx.Repo.Repository.HTMLURL())
 		if errNotification != nil{
 			fmt.Errorf("Error at CreateNotification in CloseRepo: %v", errNotification)
 		}

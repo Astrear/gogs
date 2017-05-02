@@ -17,16 +17,18 @@ type Notification struct {
 	Watched    		bool  `xorm:"NOT NULL DEFAULT false"`
 	Description		string `xorm:"VARCHAR(200) NOT NULL"`
 	Type 			int
+	Link			string
 	CreatedUnix 	int64
 }
 
-func CreateNotification(userID int64, description string, typeNot int) (err error) {
+func CreateNotification(userID int64, description string, typeNot int, link string) (err error) {
 	
 	n := &Notification{
 		UserID: userID,
 		Watched: false,
 		Description: description,
 		Type: typeNot,
+		Link: link,
 		CreatedUnix: time.Now().Unix(),
 	}
 

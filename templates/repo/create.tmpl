@@ -1,4 +1,6 @@
 {{template "base/head" .}}
+<script src="{{AppSubUrl}}/js/jquery-ui.js"></script>
+<link rel="stylesheet" type="text/css" href="https://code.jquery.com/ui/1.12.0/themes/smoothness/jquery-ui.css">
 <script type="text/javascript">
 	$( document ).ready(function() {
     	$("#tag-box").click(function() {
@@ -8,6 +10,10 @@
 		$("#btnCreate-tag").click(function(){
 			$('.ui.modal').modal('show');
 		});
+	});
+	$( function(){
+		$("#initdate").datepicker();
+		$("#enddate").datepicker();
 	});
 </script>
 <div class="repository new repo">
@@ -20,6 +26,9 @@
 				</h3>
 				<div class="ui attached segment">
 					{{template "base/alert" .}}
+					<div class="ui negative message" id="message_error_dates" style="display: none;">
+						<p>La Fecha de Inicio del Proyecto debe ser menor a la Fecha de Término del Proyecto</p>
+					</div>
 					<div class="ui positive message hide" id="divMensajeTag">
 						<p id="mensajeTag"></p>
 					</div>
@@ -126,7 +135,6 @@
 							</div>
 						</div>
 					</div>
-
 					<div class="inline required field ui grid" id="tag_dropdown">
 						<label>Tags</label>
 						<div id="tag-box" class="ui fluid multiple search selection dropdown" forceSelection="true">
@@ -141,6 +149,24 @@
 						<a class="ui icon button green" style="left: 1%; position:relative;" title="Crear Tag" id="btnCreate-tag">
 							<i class="plus icon"></i>
 						</a>
+					</div>
+					<div class="inline field" id="div_initdate">
+						<label>Fecha de Inicio de Proyecto</label>
+						<div class="ui labeled input">
+							<div class="ui label">
+								<i class="road icon"></i>
+							</div>
+							<input placeholder="Fecha de Inicio" name="init" type="text" id="initdate">
+						</div>
+					</div>
+					<div class="inline field" id="div_enddate">
+						<label>Fecha de Término de Proyecto</label>
+						<div class="ui labeled input">
+							<div class="ui label">
+								<i class="wait icon"></i>
+							</div>
+							<input placeholder="Fecha de Término" name="end" type="text" id="enddate">
+						</div>
 					</div>
 					<!-- FIN METADATOS ESCOLARES-->
 					<div class="ui divider"></div>
@@ -207,6 +233,21 @@
 					}else{
 						$("#tag_dropdown").removeClass( "error" );
 					}
+
+					var initDate = $("#initdate").val();
+					var endDate = $("#enddate").val();
+
+					if(new Date(initDate) >= new Date(endDate)){
+						$("#div_initdate").addClass( "error" );
+						$("#div_enddate").addClass( "error" );
+						$("#message_error_dates").show();
+						event.preventDefault();
+					}else{
+						$("#div_initdate").removeClass("error");
+						$("#div_enddate").removeClass("error");
+						$("#message_error_dates").hide();
+					}
+
 				});
 			</script>
 		</div>

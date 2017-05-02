@@ -1571,6 +1571,79 @@ function registrarMateria(){
     });
 }
 
+var $CardObject = $(`
+    <li class="ui card"  data-id="" data-list="" data-index="" data-state="" data-assignee="" data-duration="" data-activated="">
+        <div class="ui top attached button"></div>
+        <div class="content">
+            <div class="left floated author assignee"></div>
+            <div class="right floated meta time duration"></div>
+            <div class="description">
+                <p></p>
+            </div>
+        </div>
+    </li>
+    `);
+var $Colors     = ["red", "olive", "teal", "grey"];
+var $Icons      = ["stop", "stop", "undo", "play"];
+var $Labels     = ["Finalizar", "Finalizar", "Reactivar", "Activar"];
+var $Priority   = ["", "Alta", "Urgente"];
+var $PColors    = ["", "purple", "orange"];
+
+function getCardsByUser(){
+
+    $(".itemUser").click(function (event){
+        var userID = $(this).attr("data-id");
+        var repoID = $(this).attr("data-repoID");
+        var $segment = $("#segmentCardsUser");
+
+        $.ajax({
+            url: suburl + '/api/v1/cards/user/' + userID + '/' + repoID,
+            type: "POST",
+            dataType: "json",
+            success: function (response) {
+                var cards = JSON.parse(JSON.stringify(response)).data;
+                $segment.html("");
+                if(cards.length > 0){
+                    $.each(cards, function(index, element) {
+                        var $NewCard = $CardObject.clone(true);
+                        $($NewCard).data("state", element.State);
+                        $($NewCard).data("priority", element.Priority);
+                        $($NewCard).data("duration", element.Duration);
+                        $($NewCard).data("activated",element.Activated);
+                        $($NewCard).addClass($Colors[element.State]);
+                        $($NewCard).find('p').text(element.Body);
+                        $($NewCard).data("assignee", element.Assignee.username);
+                        $($NewCard).find(".assignee").html("<img class='ui avatar image' src='" + element.Assignee.avatar_url + "'>" + element.Assignee.username);
+                        $($NewCard).data("priority", element.Priority);
+                        UpdateCardTimeLabel($NewCard);
+                        ValidateDuration($NewCard);
+                        if(element.Priority > 0) {
+                            if($($NewCard).find(".extra.content").length) {
+                                $($NewCard).find(".priority").html("<a class='ui "+ $PColors[element.Priority] +" empty circular label'></a>"+ $Priority[element.Priority] +"</span>");
+                            } else {
+                                $($NewCard).append("<div class='extra content'><a class='ui "+ $PColors[element.Priority] +" empty circular label'></a>&nbsp;"+ $Priority[element.Priority] +"</span> </div>");
+                            }
+                        } else {
+                            if($($NewCard).find(".outdate").length == 0){
+                                $($NewCard).find(".extra.content").remove();
+                            }
+                        }
+
+                        $segment.append($NewCard);
+                    });
+                }
+                else{
+                    $segment.html('<br><h3 style="margin-left: 27%;"><i class="big delete calendar icon"></i> No hay tarjetas asignadas a este usuario</h3><br>');
+                }
+            },
+            error: function(response){
+                console.log(reponse.error);
+            }
+        });
+        
+    });
+}
+
 $(document).ready(function () {
     csrf = $('meta[name=_csrf]').attr("content");
     suburl = $('meta[name=_suburl]').attr("content");
@@ -1771,6 +1844,7 @@ $(document).ready(function () {
     registrarTag();
 
     getCoursesBySemester();
+    getCardsByUser();
 
     initCommentForm();
     initInstall();

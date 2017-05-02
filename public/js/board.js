@@ -1,6 +1,8 @@
-var $Colors = ["red", "olive", "teal", "grey"];
-var $Icons  = ["stop", "stop", "undo", "play"];
-var $Labels = ["Finalizar", "Finalizar", "Reactivar", "Activar"];
+var $Colors 	= ["red", "olive", "teal", "grey"];
+var $Icons  	= ["stop", "stop", "undo", "play"];
+var $Labels 	= ["Finalizar", "Finalizar", "Reactivar", "Activar"];
+var $Priority 	= ["", "Alta", "Urgente"];
+var $PColors 	= ["", "purple", "orange"];
 
 	
 var $ListObject = $(`
@@ -79,19 +81,40 @@ $(function(){
 
 		$(".card").each(function(index, element){
 			var $State = $(this).data("state");
+			var $CPriority = $(this).data("priority");
 			$(this).addClass($Colors[$State]);
 			$(this).find(".change.state").attr("data-tooltip", $Labels[$State]);
 			$(this).find(".change.state > .icon").addClass($Icons[$State]);
+			console.log($CPriority)
+			if($CPriority > 0) {
+				$(this).find(".priority").html("<a class='ui "+ $PColors[$CPriority] +" empty circular label'></a>&nbsp;"+ $Priority[$CPriority] +"</span>");
+			}
 			UpdateCardTimeLabel($(this));
+			ValidateDuration($(this));
 		});
 
 		RefreshCardTime();
-
-		
 	});
 });
 
 
+function ValidateDuration($this){
+	if( ($RepoInitTime * 1000) + ($($this).data("duration") ) > ($RepoLimitTime * 1000) ) {
+		if($($this).find(".outdate").length == 0) {
+			if($($this).find(".extra.content").length) {
+				$($this).find(".extra.content").append("<span class='right floated icon outdate'><i class='warning sign icon' />Tarjeta Fuera de Limite</span>");
+			} else {
+				$($this).append("<div class='extra content'><span class='right floated icon outdate'><i class='warning sign icon' />Tarjeta Fuera de Limite</span></div>");
+			}
+		}
+	} else {
+		if($($this).find(".priority").length) {
+			$($this).find(".outdate").remove();
+		} else {
+			$($this).find(".extra.content").remove();
+		}
+	}
+}
 
 function RefreshCardTime(){
 	console.log("doing time update")
@@ -494,6 +517,7 @@ function NewCard($this){
 		$($NewCard).data("list", data.List);
 		$($NewCard).data("index", data.Index);
 		$($NewCard).data("state", data.State);
+		$($NewCard).data("priority", data.Priority);
 		$($NewCard).data("duration", data.Duration);
 		$($NewCard).data("activated",data.Activated);
 
@@ -563,6 +587,7 @@ $('#EditCard').modal({
 		if($Assignee.length){
 			$("#Assignee").dropdown("set selected", $Assignee);
 		}
+		$("#Priority").dropdown("set selected", $($Card).data("priority"))
 	},
 	onApprove : function(){
 		UpdateCard($Card)
@@ -570,22 +595,36 @@ $('#EditCard').modal({
 	onHide: function(){
 		$("#Description").val("")
 		$("#Assignee").dropdown("clear");
+		$("#Priority").dropdown("clear");
 	},
 });
 
 function UpdateCard($this){
+	console.log($("#Priority").dropdown("get value"))
 	$.ajax({
 		url: "/api/v1" + $RepoLink + "/board/card/" + $($this).data("id"),
 		type: 'PATCH',
 		dataType: 'JSON',
-		data: {body: $("#Description").val(), assignee: $("#Assignee").dropdown("get value"),}
+		data: {body: $("#Description").val(), assignee: $("#Assignee").dropdown("get value"), priority: $("#Priority").dropdown("get value"),}
 	})
 	.done(function(data, textStatus, xhr) {
 		$($this).find("p").text(data.Body);
-		if(data.Assignee != null){
+		if(data.Assignee != null) {
 			if($($this).data("assignee") != data.Assignee.username){
 				$($this).data("assignee", data.Assignee.username);
 				$($this).find(".assignee").html("<img class='ui avatar image' src='" + data.Assignee.avatar_url + "'>" + data.Assignee.username);
+			}
+		}
+		$($this).data("priority", data.Priority);
+		if(data.Priority > 0) {
+			if($($this).find(".extra.content").length) {
+				$($this).find(".priority").html("<a class='ui "+ $PColors[data.Priority] +" empty circular label'></a>"+ $Priority[data.Priority] +"</span>");
+			} else {
+				$($this).append("<div class='extra content'><a class='ui "+ $PColors[data.Priority] +" empty circular label'></a>&nbsp;"+ $Priority[data.Priority] +"</span> </div>");
+			}
+		} else {
+			if($($this).find(".outdate").length == 0){
+				$($this).find(".extra.content").remove();
 			}
 		}
 	})
@@ -695,6 +734,7 @@ function UpdateCardDuration($this){
 		if($($this).data("state") == 0){
 			UpdateCardState($this);
 		}
+		ValidateDuration($this);
 	})
 	.fail(function(data, textStatus, xhr) {
 		if(data.status == 403){

@@ -1,6 +1,13 @@
 <!DOCTYPE html>
 <html>
 <head data-suburl="{{AppSubUrl}}">
+	<meta property="og:url" 		content="http://63.142.255.124:4000/{{.RepoLink}}" />
+	<meta property="og:type" 		content="website" />
+	<meta property="og:title"       content="Proyecto {{.Repository.Name}} creado por {{.Repository.Owner.FullName}}" />
+	<meta property="og:description" content="{{.Repository.Description}}" />
+	<meta property="og:image"       content="http://63.142.255.124:4000/img/wolfmail.png" />
+	<meta property="fb:app_id" 		content="298566370564910" />
+
 	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 	<meta http-equiv="X-UA-Compatible" content="IE=edge"/>
 	<meta name="author" content="ESCOM" />
@@ -46,6 +53,24 @@
 	<!--Charts.js-->
 	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.3.0/Chart.bundle.js"></script>
 	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.3.0/Chart.js"></script>
+	<script>
+	  window.fbAsyncInit = function() {
+	    FB.init({
+	      appId      : '298566370564910',
+	      xfbml      : true,
+	      version    : 'v2.9'
+	    });
+	    FB.AppEvents.logPageView();
+	  };
+
+	  (function(d, s, id){
+	     var js, fjs = d.getElementsByTagName(s)[0];
+	     if (d.getElementById(id)) return;
+	     js = d.createElement(s); js.id = id;
+	     js.src = "//connect.facebook.net/es_LA/sdk.js";
+	     fjs.parentNode.insertBefore(js, fjs);
+	   }(document, 'script', 'facebook-jssdk'));
+	</script>
 
 	<!--SyntaxHighlight
 	

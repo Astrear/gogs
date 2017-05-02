@@ -37,6 +37,8 @@ type CreateRepoForm struct {
 	Group     int64
 	Subject   int64
 	Professor int64
+	Init 	  string
+	End 	  string
 }
 
 func (f *CreateRepoForm) Validate(ctx *macaron.Context, errs binding.Errors) binding.Errors {
@@ -111,6 +113,8 @@ type RepoSettingForm struct {
 	Subject   int64
 	Semester  int64
 	Group     int64
+	Init 	  string
+	End 	  string
 }
 
 func (f *RepoSettingForm) Validate(ctx *macaron.Context, errs binding.Errors) binding.Errors {

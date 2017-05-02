@@ -10,7 +10,7 @@
 		<div class="ui category search">
 			<form id="form-search" action="{{$.RepoLink}}/search">
 				<div class="ui fluid action input">
-					<input id="inputQuery" name="q" value="{{.Keyword}}" placeholder='{{$.i18n.Tr "search_this_repo"}}...' required>
+					<input id="inputQuery" name="q" value="{{.Keyword}}" placeholder='{{$.i18n.Tr "search_this_repo"}}...' pattern="(.){6,}" title="La palabra clave no debe ser menor a 6 caracteres" required>
 					<select class="ui compact selection dropdown" name="order" id="sort-search">
 						<option value="recent">{{$.i18n.Tr "recent"}}</option>
 						<option value="revert">{{$.i18n.Tr "old"}}</option>

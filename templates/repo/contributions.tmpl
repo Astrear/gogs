@@ -23,6 +23,13 @@
 <div class="repository commits">
 	{{template "repo/header" .}}
 	<div class="ui container">
+		<div class="ui top attached tabular menu">
+  			<div class="active item" data-tab="first">Commits</div>
+  			{{if .SignedUser.IsProfessor}}
+  			<a href="cardsuser"><div class="item" data-tab="second" id="tabUserCards">Tareas</div></a>
+  			{{end}}
+		</div>
+		<div class="ui bottom attached active tab segment" data-tab="first">
 		<div class="ui centered fluid card">
 			<div class="content">
 				<div class="header">
@@ -37,6 +44,10 @@
 			</div>
 		</div>
 		<script type="text/javascript">
+			$("#tabUserCards").click(function() {
+  				window.location.href="cardsuser";
+			});
+
 			var arr_labels = new Array();
 			var arr_commits = new Array();
 			var i = 0;
@@ -155,6 +166,7 @@
 					window.myLine = new Chart(ctx, config);
 				</script>
 			{{end}}
+		</div>
 		</div>
 	</div>
 </div>

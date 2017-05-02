@@ -15,7 +15,7 @@
 					<div class="ui divided selection relaxed list">
 						{{if .Notifications}}
 							{{range .Notifications}}
-								<div class="item">
+								<div class="item itemNotification" data-href="{{.Link}}">
 									{{if eq .Type 1}}
 										<i class="bordered add user green icon"></i>
 									{{else if eq .Type 2}}
@@ -40,6 +40,14 @@
 										<i class="bordered hourglass outline red icon"></i>
 									{{else if eq .Type 12}}
 										<i class="bordered hourglass half brown icon"></i>
+									{{else if eq .Type 13}}
+										<i class="bordered green write icon"></i>
+									{{else if eq .Type 14}}
+										<i class="bordered blue edit icon"></i>
+									{{else if eq .Type 15}}
+										<i class="bordered orange archive icon"></i>
+									{{else if eq .Type 16}}
+										<i class="bordered pink upload icon"></i>
 									{{else}}
 							    		<i class="bordered checked calendar icon"></i>
 							    	{{end}}
@@ -62,4 +70,12 @@
 		</div>
 	</div>
 </div>
+<script type="text/javascript">
+	$( ".itemNotification" ).click(function() {
+		var href = $(this).attr("data-href");
+		if(href != "" || href!= null){
+			window.location.href = href;
+		}
+	});
+</script>
 {{template "base/footer" .}}

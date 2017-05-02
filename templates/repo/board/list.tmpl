@@ -80,6 +80,10 @@
 		white-space: pre-line;
 	}
 
+	.ui.card > .extra, .ui.cards > .card > .extra{
+		font-size: 0.8em !important;
+	}
+
 
 </style>
 
@@ -115,7 +119,7 @@
 					<div class="ui fluid mini black button add task">Añadir</div>
 				</form>
 				{{range .Cards}}
-				<li class="ui card"  data-id="{{.ID}}" data-list="{{.ListID}}" data-index="{{.Position}}" data-state="{{.State}}" data-assignee="{{if .AssigneeID}}{{.Assignee.Name}}{{end}}" data-duration="{{.Duration}}" data-activated="{{.ActivatedUnix}}">
+				<li class="ui card"  data-id="{{.ID}}" data-list="{{.ListID}}" data-index="{{.Position}}" data-state="{{.State}}" data-priority="{{.Priority}}" data-assignee="{{if .AssigneeID}}{{.Assignee.Name}}{{end}}" data-duration="{{.Duration}}" data-activated="{{.ActivatedUnix}}">
 					{{if not $.Repository.IsClosed}}
 					<div class="ui top attached mini icon buttons">
 						<button class="ui button edit task" data-tooltip="Editar" data-position="bottom center"><i class="setting icon"></i></button>
@@ -135,6 +139,11 @@
 							<p>{{.Description}}</p>
 						</div>
 					</div>
+					{{if gt .Priority 0}}
+					<div class="extra content">
+					    <span class="left floated priority"></span>
+				  	</div>
+				  	{{end}}
 				</li>
 				{{end}}
 			</ul>
@@ -154,6 +163,9 @@
 
 <script type="text/javascript">
 	$RepoLink = {{$.RepoLink}}
+	$RepoInitTime  = {{$.Repository.InitUnix}}
+	$RepoLimitTime = {{$.Repository.EndUnix}}
 </script>
+
 <script type="text/javascript" src="{{AppSubUrl}}/js/board.js"></script>
 {{template "base/footer" .}}

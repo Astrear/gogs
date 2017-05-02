@@ -90,7 +90,7 @@ func AddCollaboratorProfessor(professorID int64, repoID int64) error {
 		return err
 	}
 
-	affected, err := x.Insert(&Access{
+	affected, err := sess.Insert(&Access{
 		UserID: professorID,
 		RepoID: repoID,
 		Mode:   ACCESS_MODE_READ,

@@ -95,9 +95,7 @@
 			<div class="inline fields">
 				<div class="field">
 					<span>
-						<button class="ui icon black active button">
-							<i class="user icon"></i> Asignar a 
-						</button>
+						<div class="ui horizontal label">Responsable</div>
 						<div class="ui inline dropdown" id="Assignee">
 							<input type="hidden">
 							<div class="text">
@@ -115,6 +113,29 @@
 								</div>
 								{{end}}
 								{{end}}
+							</div>
+						</div>
+					</span>
+				</div>
+				<div class="field">
+					<span>
+						<div class="ui horizontal label">Prioridad</div>
+						<div class="ui inline dropdown" id="Priority">
+							<input type="hidden">
+							<div class="text">
+								<a class="ui empty circular label"></a>
+							</div>
+							<i class="dropdown icon"></i>
+							<div class="menu">
+								<div class="item" data-value="0">
+									<a class="ui grey empty circular label"></a> Normal
+								</div>
+								<div class="item" data-value="1">
+									<a class="ui purple empty circular label"></a> Alta
+								</div>
+								<div class="item" data-value="2">
+									<a class="ui orange empty circular label"></a> Urgente
+								</div>
 							</div>
 						</div>
 					</span>

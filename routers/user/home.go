@@ -108,6 +108,8 @@ func Dashboard(ctx *context.Context) {
 			ctx.Handle(500, "RepositoryList.LoadAttributes", err)
 			return
 		}
+
+		fmt.Println("%+v", collaborateRepos);
 		ctx.Data["CollaborativeRepos"] = collaborateRepos
 	}
 

@@ -206,6 +206,10 @@ type Repository struct {
 	ForkID   int64
 	BaseRepo *Repository `xorm:"-"`
 
+	Init     	time.Time `xorm:"-"`
+	InitUnix 	int64
+	End     	time.Time `xorm:"-"`
+	EndUnix 	int64
 	Created     time.Time `xorm:"-"`
 	CreatedUnix int64
 	Updated     time.Time `xorm:"-"`
@@ -879,6 +883,10 @@ type CreateRepoOptions struct {
 	GroupID     int64
 	ProfessorID int64
 	SubjectID   int64
+	Init 		time.Time
+	InitUnix 	int64
+	End 		time.Time
+	EndUnix 	int64
 }
 
 func getRepoInitFile(tp, name string) ([]byte, error) {
@@ -1077,6 +1085,8 @@ func CreateRepository(u *User, opts CreateRepoOptions) (_ *Repository, err error
 		SemesterID:  opts.SemesterID,
 		ProfessorID: opts.ProfessorID,
 		SubjectID:   opts.SubjectID,
+		InitUnix: 	 opts.InitUnix,
+		EndUnix: 	 opts.EndUnix,
 		//FIN METADATOS
 		EnableWiki:   true,
 		EnableIssues: true,

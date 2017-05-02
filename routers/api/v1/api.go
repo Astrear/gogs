@@ -276,6 +276,10 @@ func RegisterRoutes(m *macaron.Macaron) {
 			m.Get("/search", repo.Search)
 		})
 
+		//CardsByUser
+		m.Group("/cards", func() {
+			m.Post("/user/:userID/:repoID/", board.GetCardsUser)
+		})
 
 		
 		m.Group("/:username/:reponame", func() {
