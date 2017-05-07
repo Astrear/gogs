@@ -26,11 +26,11 @@
 						</div>
 						<div class="required inline field {{if .Err_Password}}error{{end}}">
 							<label for="password">{{.i18n.Tr "password"}}</label>
-							<input id="password" name="password" type="password" value="{{.password}}" pattern="(?:(?=.*[a-z])(?:(?=.*[A-Z])(?=.*[\d\W])|(?=.*\W)(?=.*\d))|(?=.*\W)(?=.*[A-Z])(?=.*\d)).{6,}$" title="La contraseña debe contener al menos 6 caracteres, 1 letra mayúscula, 1 letra minúscula, 1 número y 1 caracter especial" required>
+							<input id="password" name="password" type="password" value="{{.password}}" pattern="(?:(?=.*[a-z])(?:(?=.*[A-Z])(?=.*[\d\W])|(?=.*\W)(?=.*\d))(?=.*\W)(?=.*[A-Z])(?=.*\d)).{6,}$" title="La contraseña debe contener al menos 6 caracteres, 1 letra mayúscula, 1 letra minúscula, 1 número y 1 caracter especial" required>
 						</div>
 						<div class="required inline field {{if .Err_Password}}error{{end}}">
 							<label for="retype">{{.i18n.Tr "re_type"}}</label>
-							<input id="retype" name="retype" type="password" value="{{.retype}}" pattern="(?:(?=.*[a-z])(?:(?=.*[A-Z])(?=.*[\d\W])|(?=.*\W)(?=.*\d))|(?=.*\W)(?=.*[A-Z])(?=.*\d)).{6,}$" title="La contraseña debe contener al menos 6 caracteres, 1 letra mayúscula, 1 letra minúscula, 1 número y 1 caracter especial" required>
+							<input id="retype" name="retype" type="password" value="{{.retype}}" pattern="(?:(?=.*[a-z])(?:(?=.*[A-Z])(?=.*[\d\W])|(?=.*\W)(?=.*\d))(?=.*\W)(?=.*[A-Z])(?=.*\d)).{6,}$" title="La contraseña debe contener al menos 6 caracteres, 1 letra mayúscula, 1 letra minúscula, 1 número y 1 caracter especial" required>
 						</div>
 						<div class="inline field">
 							<label for="type"><strong>{{.i18n.Tr "type_professor"}}</strong></label>

@@ -188,45 +188,52 @@ $('#NewList').modal({
 	approve  : '.positive, .approve, .ok',
 	deny     : '.negative, .deny, .cancel',
 	onApprove: function(){
-		$.ajax({
-			url: "/api/v1" + $RepoLink + "/board/list",
-			type: 'POST',
-			dataType: 'JSON',
-			data: {title: $("#Title").val(), index: $(".list_").length,},
-		})
-		.done(function(data, textStatus, xhr) {
-			var $NewList = $ListObject.clone(true);
-			$($NewList).data("id", data.ID);
-			$($NewList).data("index", data.Index);
-			$($NewList).find(".list.title").text(data.Title);
-			
-			$NewList.find(".edit.list")[0].addEventListener("click", function(button){
-				$List = $(this).closest(".list_");
-				$("#EditList").modal("show");
-			}, false)
+		var titulo = $("#Title").val();
+		if(titulo.length > 0){
+			$.ajax({
+				url: "/api/v1" + $RepoLink + "/board/list",
+				type: 'POST',
+				dataType: 'JSON',
+				data: {title: $("#Title").val(), index: $(".list_").length,},
+			})
+			.done(function(data, textStatus, xhr) {
+				var $NewList = $ListObject.clone(true);
+				$($NewList).data("id", data.ID);
+				$($NewList).data("index", data.Index);
+				$($NewList).find(".list.title").text(data.Title);
+				
+				$NewList.find(".edit.list")[0].addEventListener("click", function(button){
+					$List = $(this).closest(".list_");
+					$("#EditList").modal("show");
+				}, false)
 
-			$NewList.find(".delete.list")[0].addEventListener("click", function(button){
-				$List = $(this).closest(".list_");
-				$("#DeleteList").modal("show");
-			}, false)
+				$NewList.find(".delete.list")[0].addEventListener("click", function(button){
+					$List = $(this).closest(".list_");
+					$("#DeleteList").modal("show");
+				}, false)
 
-			$NewList.find(".new.task")[0].addEventListener("click", function(){
-				$(this).closest(".list_").find("form").toggleClass("hidden");
-			}, false);
+				$NewList.find(".new.task")[0].addEventListener("click", function(){
+					$(this).closest(".list_").find("form").toggleClass("hidden");
+				}, false);
 
-			$NewList.find('.add.task')[0].addEventListener("click", function(button){
-				NewCard($($(button.target).closest(".list_"))[0]);
-			}, false)
-			
-			$(".column.disabled").before($NewList);
-			$(".board").sortable({
-				items: ".column:not(.excluded)",
+				$NewList.find('.add.task')[0].addEventListener("click", function(button){
+					NewCard($($(button.target).closest(".list_"))[0]);
+				}, false)
+				
+				$(".column.disabled").before($NewList);
+				$(".board").sortable({
+					items: ".column:not(.excluded)",
+				});
+			})
+			.fail(function(data, textStatus, xhr) {
+				console.log(data);
+				console.log("error");
 			});
-		})
-		.fail(function(data, textStatus, xhr) {
-			console.log(data);
-			console.log("error");
-		});
+		}
+		else{
+			alert("Debe ingresar un título");
+			return false;
+		}
 	},
 	onHide: function(){
 		$("#NewListForm")[0].reset();
@@ -717,9 +724,13 @@ $('#EditDuration').modal({
 
 
 function UpdateCardDuration($this){
-	var $DD = $.isNumeric($("#Days").val())    ?  parseInt($("#Days").val())    : 0;
-	var $HH = $.isNumeric($("#Hours").val())   && parseInt($("#Hours").val())   < 12 ? parseInt($("#Hours").val())   : 0;
-	var $MM = $.isNumeric($("#Minutes").val()) && parseInt($("#Minutes").val()) < 60 ? parseInt($("#Minutes").val()) : 0;
+	var $DD = $.isNumeric($("#Days").val())    ? parseInt($("#Days").val())    : 0;
+	var $HH = $.isNumeric($("#Hours").val())   ? parseInt($("#Hours").val())   : 0;
+	var $MM = $.isNumeric($("#Minutes").val()) ? parseInt($("#Minutes").val()) : 0;
+	$DD = $DD > 0 ? $DD : 0;
+	$HH = ($HH > 0) && ($HH < 12) ? $HH : 0;
+	$MM = ($MM > 0) && ($MM < 60) ? $MM : 0;
+
 	var $Duration = GetTime($DD, $HH, $MM);
 	$.ajax({
 		url: "/api/v1" + $RepoLink + "/board/card/duration/" + $($this).data("id"),
