@@ -3,7 +3,7 @@
 	<div class="commit-form">
 		<h3>{{.i18n.Tr "repo.editor.commit_changes"}}</h3>
 		<div class="field">
-			<input name="commit_summary" placeholder="Descripcion simple del commit" autofocus>
+			<input name="commit_summary" placeholder="Descripcion simple del commit" autofocus required="required">
 		</div>
 		<div class="field">
 			<textarea name="commit_message" placeholder="{{.i18n.Tr "repo.editor.commit_message_desc"}}" rows="2">{{.commit_message}}</textarea>

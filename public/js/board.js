@@ -717,9 +717,13 @@ $('#EditDuration').modal({
 
 
 function UpdateCardDuration($this){
-	var $DD = $.isNumeric($("#Days").val())    ?  parseInt($("#Days").val())    : 0;
-	var $HH = $.isNumeric($("#Hours").val())   && parseInt($("#Hours").val())   < 12 ? parseInt($("#Hours").val())   : 0;
-	var $MM = $.isNumeric($("#Minutes").val()) && parseInt($("#Minutes").val()) < 60 ? parseInt($("#Minutes").val()) : 0;
+	var $DD = $.isNumeric($("#Days").val())    ? parseInt($("#Days").val())    : 0;
+	var $HH = $.isNumeric($("#Hours").val())   ? parseInt($("#Hours").val())   : 0;
+	var $MM = $.isNumeric($("#Minutes").val()) ? parseInt($("#Minutes").val()) : 0;
+	$DD = $DD > 0 ? $DD : 0;
+	$HH = ($HH > 0) && ($HH < 12) ? $HH : 0;
+	$MM = ($MM > 0) && ($MM < 60) ? $MM : 0;
+
 	var $Duration = GetTime($DD, $HH, $MM);
 	$.ajax({
 		url: "/api/v1" + $RepoLink + "/board/card/duration/" + $($this).data("id"),

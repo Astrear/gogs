@@ -283,8 +283,10 @@ func ExpireCard(ctx *context.APIContext) {
 		}
 	}
 
-	if err := models.CreateNotification(ctx.Repo.Owner.ID, "Ha caducado una tarjeta en " + ctx.Repo.Repository.Name, 11, ctx.Repo.Repository.HTMLURL()); err != nil{
-		fmt.Errorf("Error at CreateNotification in ExpireCard: %v", err)
+	if(ctx.Repo.Owner.ID != card.AssigneeID){
+		if err := models.CreateNotification(ctx.Repo.Owner.ID, "Ha caducado una tarjeta en " + ctx.Repo.Repository.Name, 11, ctx.Repo.Repository.HTMLURL()); err != nil{
+			fmt.Errorf("Error at CreateNotification in ExpireCard: %v", err)
+		}
 	}
 	//SEND NOTIFICATION
 
