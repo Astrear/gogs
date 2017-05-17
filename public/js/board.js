@@ -23,7 +23,7 @@ var $ListObject = $(`
 		<ul class="ui bottom attached centered secondary segment holder">
 			<form class="ui mini hidden form disabled">
 				<div class="field">
-					<textarea rows="2" placeholder="Descipcion de la tarjeta"/>
+					<textarea rows="2" placeholder="Descipcion de la tarjeta" maxlength="500"/>
 				</div>
 				<div class="ui fluid mini black button add task">Añadir</div>
 			</form>
@@ -188,8 +188,9 @@ $('#NewList').modal({
 	approve  : '.positive, .approve, .ok',
 	deny     : '.negative, .deny, .cancel',
 	onApprove: function(){
-		var titulo = $("#Title").val();
-		if(titulo.length > 0){
+		var titulo = $("#Title").val().trim();
+		
+		if(titulo.length > 0 && titulo.length<= 30){
 			$.ajax({
 				url: "/api/v1" + $RepoLink + "/board/list",
 				type: 'POST',
@@ -230,8 +231,12 @@ $('#NewList').modal({
 				console.log("error");
 			});
 		}
-		else{
+		else if(titulo.length <= 0){
 			alert("Debe ingresar un título");
+			return false;
+		}
+		else if(titulo.length > 30){
+			alert("El título no debe exceder los 30 caracteres");
 			return false;
 		}
 	},
@@ -509,74 +514,80 @@ function TransferCard($this, $Destination){
 }
 
 
-
 function NewCard($this){
-	$.ajax({
-		url: "/api/v1" + $RepoLink + "/board/card",
-		type: 'POST',
-		dataType: 'JSON',
-		data: {list: $($this).data("id"), body: $($this).find("textarea").val(), index: $($this).find(".card").length + 1,},
-	})
-	.done(function(data, textStatus, xhr) {
-		var $NewCard = $CardObject.clone(true);
-		$($NewCard).attr("data-id", data.ID);
-		$($NewCard).data("id", data.ID);
-		$($NewCard).data("list", data.List);
-		$($NewCard).data("index", data.Index);
-		$($NewCard).data("state", data.State);
-		$($NewCard).data("priority", data.Priority);
-		$($NewCard).data("duration", data.Duration);
-		$($NewCard).data("activated",data.Activated);
+	var desc = $($this).find("textarea").val().trim();
+	if(desc.length > 0){
+		$.ajax({
+			url: "/api/v1" + $RepoLink + "/board/card",
+			type: 'POST',
+			dataType: 'JSON',
+			data: {list: $($this).data("id"), body: $($this).find("textarea").val(), index: $($this).find(".card").length + 1,},
+		})
+		.done(function(data, textStatus, xhr) {
+			var $NewCard = $CardObject.clone(true);
+			$($NewCard).attr("data-id", data.ID);
+			$($NewCard).data("id", data.ID);
+			$($NewCard).data("list", data.List);
+			$($NewCard).data("index", data.Index);
+			$($NewCard).data("state", data.State);
+			$($NewCard).data("priority", data.Priority);
+			$($NewCard).data("duration", data.Duration);
+			$($NewCard).data("activated",data.Activated);
 
-		$($NewCard).addClass($Colors[data.State]);
+			$($NewCard).addClass($Colors[data.State]);
 
-		$($NewCard).find('p').text(data.Body);
+			$($NewCard).find('p').text(data.Body);
 
-		$NewCard.find('.edit.task')[0].addEventListener("click", function(button){
-			$Card = $(this).closest(".card");
-			$("#EditCard").modal("show");
-		}, false);
+			$NewCard.find('.edit.task')[0].addEventListener("click", function(button){
+				$Card = $(this).closest(".card");
+				$("#EditCard").modal("show");
+			}, false);
 
-		$NewCard.find(".set.duration")[0].addEventListener("click", function(button){
-			$Card = $(this).closest(".card");
-			$("#EditDuration").modal("show");
-		}, false);
+			$NewCard.find(".set.duration")[0].addEventListener("click", function(button){
+				$Card = $(this).closest(".card");
+				$("#EditDuration").modal("show");
+			}, false);
 
-		$NewCard.find(".change.state > i").addClass($Icons[data.State]);
-		$NewCard.find(".change.state").attr("data-tooltip", $Labels[data.State]);
+			$NewCard.find(".change.state > i").addClass($Icons[data.State]);
+			$NewCard.find(".change.state").attr("data-tooltip", $Labels[data.State]);
 
-		$NewCard.find(".change.state")[0].addEventListener("click", function(button){
-			UpdateCardState($(this).closest(".card"));
-		}, false);
+			$NewCard.find(".change.state")[0].addEventListener("click", function(button){
+				UpdateCardState($(this).closest(".card"));
+			}, false);
 
-		$NewCard.find('.delete.task')[0].addEventListener("click", function(button){
-			$Card = $(this).closest(".card");
-			$("#DeleteCard").modal("show");
-		}, false);
-		$($this).find(".holder").append($NewCard);
-		$($this).find("textarea").val("");
-		$(".holder").sortable({
-			items: ".card", 
-			connectWith: ".holder", 
-			cancel: ".disabled",
+			$NewCard.find('.delete.task')[0].addEventListener("click", function(button){
+				$Card = $(this).closest(".card");
+				$("#DeleteCard").modal("show");
+			}, false);
+			$($this).find(".holder").append($NewCard);
+			$($this).find("textarea").val("");
+			$(".holder").sortable({
+				items: ".card", 
+				connectWith: ".holder", 
+				cancel: ".disabled",
+			});
+			$(".holder").on('sortupdate', function(event, ui) {
+				SortInsde(ui)
+			});
+
+
+			$(".holder").on("sortreceive", function(event, ui) {
+				SortAdd(ui)
+			});
+
+			$(".holder").on("sort", function(event, ui){
+				SortCancel(ui)
+			});
+		})
+		.fail(function(data, textStatus, xhr) {
+			console.log(data);
+			console.log("error");
 		});
-		$(".holder").on('sortupdate', function(event, ui) {
-			SortInsde(ui)
-		});
-
-
-		$(".holder").on("sortreceive", function(event, ui) {
-			SortAdd(ui)
-		});
-
-		$(".holder").on("sort", function(event, ui){
-			SortCancel(ui)
-		});
-	})
-	.fail(function(data, textStatus, xhr) {
-		console.log(data);
-		console.log("error");
-	});
+	}
+	else{
+		$(".message.warning").find("p").text("Debes ingresar una descripción válida para la tarjeta");
+  		$(".message.warning").transition({animation: "fade", duration: "4s",}).transition("scale");
+	}
 }
 
 $(".add.task").click(function(){
