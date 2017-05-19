@@ -481,7 +481,7 @@ func PrepareWebhooks(repo *Repository, event HookEventType, p api.Payloader) err
 				return fmt.Errorf("GetSlackPayload: %v", err)
 			}
 		default:
-			p.SetSecret(w.Secret)
+			//p.SetSecret(w.Secret)
 			payloader = p
 		}
 
