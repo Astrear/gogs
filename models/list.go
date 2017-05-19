@@ -301,7 +301,7 @@ func (card *Card) APIFormat() *api.Card {
 		Body:     	card.Description,
 		State:    	int(card.State),
 		Priority: 	 card.Priority,
-		TimeElapsed: card.TimeElapsed
+		Time: 		card.TimeElapsed,
 		Duration: 	card.Duration,
 		Activated:	card.ActivatedUnix,
 	}
