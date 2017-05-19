@@ -154,6 +154,11 @@ func EditCardState(ctx *context.APIContext) {
 		if card.IsActive() {
 			card.State 		= models.CARD_STATE_CLOSED
 			card.Duration 	= 0
+			if card.TimeElapsed > 0 {
+				card.TimeElapsed += time.Now().Unix() - card.ActivatedUnix
+			} else {
+				card.TimeElapsed = time.Now().Unix() - card.ActivatedUnix
+			}
 		} else if card.IsExpired() {
 			if card.Duration > 0 {
 				card.State 			= models.CARD_STATE_ACTIVE
@@ -164,7 +169,7 @@ func EditCardState(ctx *context.APIContext) {
 				if card.TimeElapsed > 0 {
 					card.TimeElapsed += time.Now().Unix() - card.ActivatedUnix
 				} else {
-					card.TimeElapsed = time.Now().Unix()
+					card.TimeElapsed = time.Now().Unix() - card.ActivatedUnix
 				}
 			}
 		} else {

@@ -118,7 +118,7 @@
 				{{if .CardsOwner}}
 					<div class="ui cards" id="segmentCardsUser" style="padding-left: 7.8%;">
 						{{range .CardsOwner}}
-							<li class="ui card"  data-state="{{.State}}" data-priority="{{.Priority}}" data-duration="{{.Duration}}" data-activated="{{.ActivatedUnix}}">
+							<li class="ui card"  data-state="{{.State}}" data-priority="{{.Priority}}" data-time="{{.TimeElapsed}}" data-duration="{{.Duration}}" data-activated="{{.ActivatedUnix}}">
 								{{if not $.Repository.IsClosed}}
 								<div class="ui top attached button"></div>
 								{{end}}
@@ -173,7 +173,19 @@
 			}
 			UpdateCardTimeLabel($(this));
 			ValidateDuration($(this));
+			TimeElapsed($(this));
 		});
+
+		function TimeElapsed($this){
+			if($($this).data('state') == 2 && $($this).data('time') > 0) {
+				if($($this).find(".extra.content").length) {
+					$($this).find(".extra.content").append("<span class='right floated icon outdate'>"+ GetFormatedLabel($($this).data('time')) +"</span>");
+				} else {
+					$($this).append("<div class='extra content'><span class='right floated icon outdate'>"+ GetFormatedLabel($($this).data('time')) +"</span></div>");
+				}
+				
+			}
+		}
 
 		function ValidateDuration($this){
 			if( ($RepoInitTime * 1000) + ($($this).data("duration") ) > ($RepoLimitTime * 1000) ) {
@@ -221,6 +233,33 @@
 				}
 				break;
 			}
+		}
+
+		function GetFormatedLabel($Time) {
+			var Time = GetTimeUnits($Time);
+			var Label = "Duración: ";
+			if($Time < 60) {
+				Label += "Menos de Un Minuto"
+			} else { 
+				if(Time.Days > 0) {
+					Label = (Time.Days > 1) ? Label + Time.Days + " Dias" : Label + Time.Days + " Dia";
+					if(Time.Hours > 0 || Time.Minutes > 0){
+						Label = (Time.Hours > 0 && Time.Minutes > 0) ? Label + ", " : Label + " y ";
+					}
+				}
+
+				if(Time.Hours > 0) {
+					Label +=  Time.Hours + "h";
+					if(Time.Minutes > 0){
+						Label += " y ";
+					}
+				}
+
+				if(Time.Minutes > 0) {
+					Label += Time.Minutes + "m";
+				}
+			}
+			return Label
 		}
 
 		function FormatTimeLabel($this, Time) {

@@ -119,7 +119,7 @@
 					<div class="ui fluid mini black button add task">Añadir</div>
 				</form>
 				{{range .Cards}}
-				<li class="ui card"  data-id="{{.ID}}" data-list="{{.ListID}}" data-index="{{.Position}}" data-state="{{.State}}" data-priority="{{.Priority}}" data-assignee="{{if .AssigneeID}}{{.Assignee.Name}}{{end}}" data-duration="{{.Duration}}" data-activated="{{.ActivatedUnix}}">
+				<li class="ui card"  data-id="{{.ID}}" data-list="{{.ListID}}" data-index="{{.Position}}" data-state="{{.State}}" data-priority="{{.Priority}}" data-assignee="{{if .AssigneeID}}{{.Assignee.Name}}{{end}}" data-duration="{{.Duration}}" data-time="{{.TimeElapsed}}" data-activated="{{.ActivatedUnix}}">
 					{{if not $.Repository.IsClosed}}
 					<div class="ui top attached mini icon buttons">
 						<button class="ui button edit task" data-tooltip="Editar" data-position="bottom center"><i class="setting icon"></i></button>
