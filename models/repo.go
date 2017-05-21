@@ -704,7 +704,9 @@ func wikiRemoteURL(remote string) string {
 	remote = strings.TrimSuffix(remote, ".git")
 	for _, suffix := range commonWikiURLSuffixes {
 		wikiURL := remote + suffix
-		if git.IsRepoURLAccessible(wikiURL) {
+		if git.IsRepoURLAccessible(git.NetworkOptions{
+			URL: wikiURL,
+		}) {
 			return wikiURL
 		}
 	}
@@ -816,8 +818,8 @@ func cleanUpMigrateGitConfig(configPath string) error {
 }
 
 func createUpdateHook(repoPath string) error {
-	return git.SetUpdateHook(repoPath,
-		fmt.Sprintf(_TPL_UPDATE_HOOK, setting.ScriptType, "\""+setting.AppPath+"\"", setting.CustomConf))
+	return nil //git.SetUpdateHook(repoPath,
+		//fmt.Sprintf(_TPL_UPDATE_HOOK, setting.ScriptType, "\""+setting.AppPath+"\"", setting.CustomConf))
 }
 
 // Finish migrating repository and/or wiki with things that don't need to be done for mirrors.

@@ -284,6 +284,7 @@ type Card struct {
 	State 		  CardState `xorm:"Default 0"`
 	Priority 	  int 	 `xorm:"Default 0"`
 	Duration 	  int64
+	TimeElapsed   int64
 	ActivatedUnix int64
 	CreatedUnix   int64
 }
@@ -299,7 +300,8 @@ func (card *Card) APIFormat() *api.Card {
 		Index:    	card.Position,
 		Body:     	card.Description,
 		State:    	int(card.State),
-		Priority: 	card.Priority,
+		Priority: 	 card.Priority,
+		Time: 		card.TimeElapsed,
 		Duration: 	card.Duration,
 		Activated:	card.ActivatedUnix,
 	}

@@ -32,7 +32,7 @@ var $ListObject = $(`
 `);
 
 var $CardObject = $(`
-	<li class="ui card"  data-id="" data-list="" data-index="" data-state="" data-assignee="" data-duration="" data-activated="">
+	<li class="ui card"  data-id="" data-list="" data-index="" data-state="" data-assignee="" data-duration="" data-time="" data-activated="">
 		<div class="ui top attached mini icon buttons">
 			<button class="ui button edit task" data-tooltip="Editar" data-position="bottom center"><i class="setting icon"></i></button>
 			<button class="ui button set duration" data-tooltip="Duración" data-position="bottom center"><i class="alarm icon"></i></button>
@@ -91,11 +91,23 @@ $(function(){
 			}
 			UpdateCardTimeLabel($(this));
 			ValidateDuration($(this));
+			TimeElapsed($(this));
 		});
 
 		RefreshCardTime();
 	});
 });
+
+function TimeElapsed($this){
+	if($($this).data('state') == 2 && $($this).data('time') > 0) {
+		if($($this).find(".extra.content").length) {
+			$($this).find(".extra.content").append("<span class='right floated icon outdate'>"+ GetFormatedLabel($($this).data('time')) +"</span>");
+		} else {
+			$($this).append("<div class='extra content'><span class='right floated icon outdate'>"+ GetFormatedLabel($($this).data('time')) +"</span></div>");
+		}
+		
+	}
+}
 
 
 function ValidateDuration($this){
@@ -158,6 +170,33 @@ function UpdateCardTimeLabel($this){
 			}
 			break;
 	}
+}
+
+function GetFormatedLabel($Time) {
+	var Time = GetTimeUnits($Time);
+	var Label = "Duración: ";
+	if($Time < 60) {
+		Label += "Menos de Un Minuto"
+	} else { 
+		if(Time.Days > 0) {
+			Label = (Time.Days > 1) ? Label + Time.Days + " Dias" : Label + Time.Days + " Dia";
+			if(Time.Hours > 0 || Time.Minutes > 0){
+				Label = (Time.Hours > 0 && Time.Minutes > 0) ? Label + ", " : Label + " y ";
+			}
+		}
+
+		if(Time.Hours > 0) {
+			Label +=  Time.Hours + "h";
+			if(Time.Minutes > 0){
+				Label += " y ";
+			}
+		}
+
+		if(Time.Minutes > 0) {
+			Label += Time.Minutes + "m";
+		}
+	}
+	return Label
 }
 
 function FormatTimeLabel($this, Time) {
@@ -681,9 +720,11 @@ function UpdateCardState($this){
 		$($this).removeClass($Colors[$($this).data("state")]).addClass($Colors[data.State]);
 		$($this).find(".change.state > i").removeClass($Icons[$($this).data("state")]).addClass($Icons[data.State]);
 		$($this).find(".change.state").attr("data-tooltip", $Labels[data.State]);
+		$($this).data("time", data.Time);
 		$($this).data("state", data.State);
 
 		UpdateCardTimeLabel($this);
+		TimeElapsed($this);
 	})
 	.fail(function(data, textStatus, xhr) {
 		if(data.status == 403){
