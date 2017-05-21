@@ -25,7 +25,6 @@
 						<img class="ui avatar image" src="{{AppSubUrl}}/img/Award.png">
 						<span class="rating">{{.GetHTMLAverageRepo}}</span>
 					</div>
-					<span class="text grey"><i class="octicon octicon-star"></i> {{.NumStars}}</span>
 			    </div>
 				<div class="header">
 					<a class="name" href="{{AppSubUrl}}/{{if .Owner}}{{.Owner.Name}}{{else if $.Org}}{{$.Org.Name}}{{else}}{{$.Owner.Name}}{{end}}/{{.Name}}">{{if $.PageIsExplore}}{{.Owner.Name}} / {{end}}{{.Name}}</a>
