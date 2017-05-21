@@ -101,7 +101,7 @@ $(function(){
 function TimeElapsed($this){
 	if($($this).data('state') == 2 && $($this).data('time') > 0) {
 		if($($this).find(".extra.content").length) {
-			$($this).find(".extra.content").append("<span class='right floated icon outdate'>"+ GetFormatedLabel($($this).data('time')) +"</span>");
+			$($this).find(".extra.content").html("<span class='right floated icon outdate'>"+ GetFormatedLabel($($this).data('time')) +"</span>");
 		} else {
 			$($this).append("<div class='extra content'><span class='right floated icon outdate'>"+ GetFormatedLabel($($this).data('time')) +"</span></div>");
 		}
@@ -675,9 +675,18 @@ function UpdateCard($this){
 		$($this).data("priority", data.Priority);
 		if(data.Priority > 0) {
 			if($($this).find(".extra.content").length) {
-				$($this).find(".priority").html("<a class='ui "+ $PColors[data.Priority] +" empty circular label'></a>"+ $Priority[data.Priority] +"</span>");
+				if($($this).find(".priority").length){
+					$($this).find(".priority").html("<a class='ui "+ $PColors[data.Priority] +" empty circular label'></a>"+ $Priority[data.Priority] +"</span>");
+				} else {
+					$($this).find(".extra.content").append("<span class='left floated priority'><a class='ui "+ $PColors[data.Priority] +" empty circular label'></a>"+ $Priority[data.Priority] +"</span>");
+				}
 			} else {
-				$($this).append("<div class='extra content'><a class='ui "+ $PColors[data.Priority] +" empty circular label'></a>&nbsp;"+ $Priority[data.Priority] +"</span> </div>");
+				$($this).append(
+					"<div class='extra content'>"+
+						"<span class='left floated priority'>"+
+							"<a class='ui "+ $PColors[data.Priority] +" empty circular label'></a>&nbsp;"+ $Priority[data.Priority] +
+						"</span>"+
+					"</div>");
 			}
 		} else {
 			if($($this).find(".outdate").length == 0){
